@@ -27,6 +27,8 @@ vim.opt.textwidth = 120
 -- Turn syntax highlighting on
 vim.cmd('syntax on')
 
+-- Use ctag generated tags
+vim.opt.tags = './tags;/'
 -- Uncomment if you have this colorscheme
 -- vim.cmd('colorscheme wombat256')
 
@@ -107,8 +109,8 @@ vim.cmd([[
 -- Go to definition with F12
 vim.api.nvim_set_keymap('n', '<F12>', '<C-]>', { noremap = true, silent = true })
 
--- Function to save all tabs
-local function save_all_tabs()
+-- Define the save_all_tabs function globally
+_G.save_all_tabs = function()
   local current_tab = vim.fn.tabpagenr()
   local current_win = vim.fn.winnr()
   local current_buf = vim.fn.bufnr('%')
@@ -135,7 +137,34 @@ local function save_all_tabs()
 end
 
 -- Map F5 to call the save_all_tabs function
-vim.api.nvim_set_keymap('n', '<F5>', ':lua save_all_tabs()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = true, silent = true })
+
+
+-- Key mappings for tag navigation
+vim.api.nvim_set_keymap('n', 'gd', '<C-]>', { noremap = true, silent = true })      -- Go to definition
+vim.api.nvim_set_keymap('n', 'gD', '<C-t>', { noremap = true, silent = true })      -- Go back
+vim.api.nvim_set_keymap('n', 'gT', ':tselect<CR>', { noremap = true, silent = true })  -- Tag selection if multiple matches
+vim.api.nvim_set_keymap('n', 'gr', ':tjump<CR>', { noremap = true, silent = true })    -- Jump to the tag (all matches)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- Kickstart.nvim configs
 

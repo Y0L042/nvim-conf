@@ -8,7 +8,7 @@ return {
     as = 'gruvbox',
     config = function()
       -- Uncomment to set Gruvbox as the default colorscheme
-      -- vim.cmd('colorscheme gruvbox')
+      vim.cmd('colorscheme gruvbox')
     end,
   },
   -- Add Dracula color scheme
@@ -17,7 +17,7 @@ return {
     as = 'dracula',
     config = function()
       -- Uncomment to set Dracula as the default colorscheme
-      vim.cmd('colorscheme dracula')
+      -- vim.cmd('colorscheme dracula')
     end,
   },
 
