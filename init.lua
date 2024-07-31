@@ -1,6 +1,3 @@
--- Ensure lazy.nvim is loaded
-require("config.lazy")
-
 -- Set UTF-8 encoding
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
@@ -141,13 +138,23 @@ vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = 
 
 
 -- Key mappings for tag navigation
-vim.api.nvim_set_keymap('n', 'gd', '<C-]>', { noremap = true, silent = true })      -- Go to definition
-vim.api.nvim_set_keymap('n', 'gD', '<C-t>', { noremap = true, silent = true })      -- Go back
-vim.api.nvim_set_keymap('n', 'gT', ':tselect<CR>', { noremap = true, silent = true })  -- Tag selection if multiple matches
-vim.api.nvim_set_keymap('n', 'gr', ':tjump<CR>', { noremap = true, silent = true })    -- Jump to the tag (all matches)
+-- vim.api.nvim_set_keymap('n', 'gd', '<C-]>', { noremap = true, silent = true })      -- Go to definition
+-- vim.api.nvim_set_keymap('n', 'gD', '<C-t>', { noremap = true, silent = true })      -- Go back
+-- vim.api.nvim_set_keymap('n', 'gT', ':tselect<CR>', { noremap = true, silent = true })  -- Tag selection if multiple matches
+-- vim.api.nvim_set_keymap('n', 'gr', ':tjump<CR>', { noremap = true, silent = true })    -- Jump to the tag (all matches)
 
 
+-- Set shell to MSYS2 bash.exe
+vim.opt.shell = "C:/msys64/usr/bin/bash"
+vim.opt.shellcmdflag = '-c'
+vim.opt.shellquote = ''
+vim.opt.shellxquote = ''
 
+-- Ensure shellslash is not set
+vim.opt.shellslash = false
+
+-- Add ripgrep to the PATH
+vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
 
 
 
@@ -173,6 +180,11 @@ vim.api.nvim_set_keymap('n', 'gr', ':tjump<CR>', { noremap = true, silent = true
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+-- Set the timeout length for leader key sequences
+vim.opt.timeoutlen = 1500  -- Adjust this value as needed, 1000 ms = 1 second
+
+-- Ensure lazy.nvim is loaded
+require("config.lazy")
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
@@ -232,25 +244,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 -- Define a custom command `E` that maps to `Explore`
 vim.api.nvim_create_user_command('E', 'Explore', {})
 
--- Tree-sitter configuration
-require'nvim-treesitter.configs'.setup {
-  -- Ensure these parsers are installed
-  ensure_installed = { "c" },
 
-  -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
 
-  -- Automatically install missing parsers when entering buffer
-  auto_install = true,
 
-  highlight = {
-    -- `false` will disable the whole extension
-    enable = true,
-
-    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-    -- Using this option may slow down your editor, and you may see some duplicate highlights.
-    -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = false,
-  },
-}
