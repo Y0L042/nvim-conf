@@ -88,6 +88,12 @@ vim.api.nvim_set_keymap('i', '<F2>', '<ESC>:update<CR>', { noremap = true, silen
 -- Switch between header/source with F4 (change between .c & .cpp)
 vim.api.nvim_set_keymap('n', '<F4>', ':update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('i', '<F4>', '<ESC>:update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<F4>', '<ESC>:update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>', { noremap = true, silent = true })
+
+-- Switch between header/source and search for selected text/text under cursor with Shift+F4
+vim.api.nvim_set_keymap('n', '<S-F4>', ":let @/ = expand('<cword>')<CR>:update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>ggnzt", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('i', '<S-F4>', "<ESC>:let @/ = expand('<cword>')<CR>:update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>ggnzt", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<S-F4>', [[y:let @/ = @0<CR>:update<CR>:e %:p:s,.h$,.X123X,:s,\\.c$,\\.h,:s,.X123X$,.c,<CR>ggnzt]], { noremap = true, silent = true })
 
 -- Function to check if the current buffer is netrw
 _G.is_netrw = function()
@@ -144,6 +150,35 @@ vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = 
 -- vim.api.nvim_set_keymap('n', 'gr', ':tjump<CR>', { noremap = true, silent = true })    -- Jump to the tag (all matches)
 
 
+-- Set <space> as the leader key
+-- See `:help mapleader`
+--  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+-- Set the timeout length for leader key sequences
+vim.opt.timeoutlen = 2000  -- Adjust this value as needed, 1000 ms = 1 second
+
+-- Add empty lines before and after cursor line
+vim.keymap.set('n', '<leader>gj', "<Cmd>call append(line('.'),      repeat([''], v:count1))<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>gk', "<Cmd>call append(line('.') - 1,  repeat([''], v:count1))<CR>", { noremap = true, silent = true })
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Set shell to MSYS2 bash.exe
 vim.opt.shell = "C:/msys64/usr/bin/bash"
 vim.opt.shellcmdflag = '-c'
@@ -175,13 +210,7 @@ vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
 
 -- Kickstart.nvim configs
 
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
--- Set the timeout length for leader key sequences
-vim.opt.timeoutlen = 1500  -- Adjust this value as needed, 1000 ms = 1 second
+
 
 -- Ensure lazy.nvim is loaded
 require("config.lazy")

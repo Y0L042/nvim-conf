@@ -28,7 +28,7 @@ return {
   -- [[ TreeSitter  ]]
   {
     'nvim-treesitter/nvim-treesitter',
-    -- run = ':TSUpdate',
+    run = ':TSUpdate',
     config = function()
       require'nvim-treesitter.configs'.setup {
         -- Ensure these parsers are installed
@@ -177,9 +177,10 @@ return {
       vim.g.ctrlsf_backend_program = 'C:\\msys64\\ucrt64\\bin\\rg.exe'  -- Update this path to your rg.exe location
       vim.g.ctrlsf_default_root = 'project'
       vim.g.ctrlsf_auto_close = 1
-      vim.g.ctrlsf_position = 'left'
-      vim.g.ctrlsf_winsize = '35%'
+      vim.g.ctrlsf_position = 'bottom'
+      vim.g.ctrlsf_winsize = '40%'
       vim.g.ctrlsf_extra_root_markers = { '.git', '.hg', '.svn', 'Makefile', 'package.json' }
+      vim.g.ctrlsf_auto_focus = { at = 'done', duration_less_than = 1000 }
 
       -- Ignore tags file
       vim.g.ctrlsf_ignore_file = { 'tags' }
@@ -196,7 +197,10 @@ return {
 
 
 
-
+  {
+    "mg979/vim-visual-multi",
+    branch = "master",
+  },
 
 
 
@@ -225,6 +229,99 @@ return {
   --     })
   --   end,
   -- },
+
+
+  
+
+--   -- Add nvim-lspconfig
+--   {
+--     'neovim/nvim-lspconfig',
+--     config = function()
+--       require'lspconfig'.clangd.setup{
+--         settings = {
+--           clangd = {
+--             InlayHints = {
+--               Designators = true,
+--               Enabled = true,
+--               ParameterNames = true,
+--               DeducedTypes = true,
+--             },
+--             fallbackFlags = { "-std=c++20" },
+--           },
+--         }
+--       }
+--     end
+--   },
+
+--  -- Add lsp_extensions.nvim
+--   {
+--     'nvim-lua/lsp_extensions.nvim',
+--     opts = {
+--       inlay_hints = { enabled = true },
+--     },
+--     config = function()
+--     end,
+--   },
+
+  -- {
+  --   "MysticalDevil/inlay-hints.nvim",
+  --   event = "LspAttach",
+  --   dependencies = { "neovim/nvim-lspconfig" },
+  --   config = function()
+  --       require("inlay-hints").setup({})
+  --   end
+  -- },
+
+
+    -- -- Lazy function signature hints
+    -- {
+    --   "ray-x/lsp_signature.nvim",
+    --   config = function() 
+    --     require('lsp_signature').setup({
+    --       bind = true,
+    --       floating_window = true,
+    --       toggle_key = "<M-m>",
+    --       handler_opts = {
+    --         border = "rounded"
+    --       },
+    --     }, bufnr) end,
+    -- },
+
+
+  -- -- Lazy function signature hints
+  -- {
+  --   'ray-x/lsp_signature.nvim',
+  --   config = function()
+  --     require "lsp_signature".setup({
+  --       bind = true,
+  --       floating_window = true,
+  --       floating_window_above_cur_line = true,
+  --       floating_window_off_x = 0,
+  --       floating_window_off_y = 4,
+  --       hint_enable = false,
+  --       toggle_key = '<M-k>', -- toggle signature on and off in insert mode,  e.g. toggle_key = '<M-x>'
+  --       -- toggle_key_flip_floatwin_setting = false, -- true: toggle floating_windows: true|false setting after toggle key pressed
+  --       -- false: floating_windows setup will not change, toggle_key will pop up signature helper, but signature
+  --       -- may not popup when typing depends on floating_window setting
+  --       transparency = 90,
+  --       handler_opts = {
+  --         border = "rounded",
+  --       },
+  --     }, bufnr)
+
+  --     vim.keymap.set(
+  --       { 'n' }, '<M-k>', function()
+  --         require('lsp_signature').toggle_float_win()
+  --       end, 
+  --       { silent = true, noremap = true, desc = 'toggle signature' }
+  --     )
+
+  --   end
+  -- },
+
+
+
+
   -- -- Add nvim-lspconfig to configure LSP servers
   -- {
   --   "neovim/nvim-lspconfig",
