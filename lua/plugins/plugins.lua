@@ -210,6 +210,82 @@ return {
 
 
 
+  -- Add cmp-nvim-lsp plugin
+  {
+    'hrsh7th/cmp-nvim-lsp',
+  },
+
+  -- Add nvim-cmp plugin and configure it
+  {
+    'hrsh7th/nvim-cmp',
+    config = function()
+      local cmp = require('cmp')
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            vim.fn["vsnip#anonymous"](args.body)
+          end,
+        },
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp_signature_help' },
+        }),
+        mapping = {
+          ['<C-Space>'] = cmp.mapping.complete(), -- Keybinding to manually trigger completion
+        },
+      })
+    end,
+  },
+
+  -- Add nvim-lspconfig plugin to configure LSP servers
+  {
+    'neovim/nvim-lspconfig',
+    config = function()
+      local nvim_lsp = require('lspconfig')
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      local signature_help_enabled = true
+
+      -- Function to toggle signature help
+      function ToggleSignatureHelp()
+        signature_help_enabled = not signature_help_enabled
+        if signature_help_enabled then
+          print("Signature Help: Enabled")
+        else
+          print("Signature Help: Disabled")
+        end
+      end
+
+      -- Configure clangd LSP server
+      nvim_lsp.clangd.setup {
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          -- Enable signature help in insert mode if globally enabled
+          vim.api.nvim_create_autocmd("CursorHoldI", {
+            buffer = bufnr,
+            callback = function()
+              if signature_help_enabled then
+                vim.lsp.buf.signature_help()
+              end
+            end,
+          })
+
+          -- Map key to toggle signature help
+          vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>th', '<cmd>lua ToggleSignatureHelp()<CR>', { noremap = true, silent = true })
+        end,
+      }
+
+      
+
+      -- Add more language servers as needed
+      -- nvim_lsp.tsserver.setup {
+      --   capabilities = capabilities,
+      -- }
+    end,
+  },
+
+
+
+
+
 
 
 
