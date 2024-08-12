@@ -269,9 +269,19 @@ return {
         width = 30,
         side = 'left',
       },
+      on_attach = function(bufnr)
+        local api = require('nvim-tree.api')
+
+        -- Default mappings
+        api.config.mappings.default_on_attach(bufnr)
+
+        -- Custom mappings
+        vim.keymap.set('n', '<A-v>', api.node.open.vertical, { buffer = bufnr, noremap = true, silent = true })
+        vim.keymap.set('n', '<A-s>', api.node.open.horizontal, { buffer = bufnr, noremap = true, silent = true })
+      end,
     }
 
-      vim.api.nvim_set_keymap('n', '<C-n>', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+      vim.api.nvim_set_keymap('n', '<A-n>', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
 
     end,
   },
