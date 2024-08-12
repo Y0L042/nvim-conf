@@ -1,3 +1,7 @@
+local is_env_laptop_win = os.getenv("COMPUTER_ID") == 01
+local is_env_laptop_wsl2 = os.getenv("COMPUTER_ID") == 11
+local is_env_narga = os.getenv("COMPUTER_ID") == 101
+
 -- Set UTF-8 encoding
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
@@ -16,7 +20,7 @@ vim.opt.backspace = { 'indent', 'eol', 'start' }
 -- Configure tab width and insert spaces instead of tabs
 vim.opt.tabstop = 4       -- Tab width is 4 spaces
 vim.opt.shiftwidth = 4    -- Indent also with 4 spaces
-vim.opt.expandtab = true  -- Expand tabs to spaces
+vim.opt.expandtab = false  -- Expand tabs to spaces
 
 -- Wrap lines at 120 chars. 80 is somewhat antiquated with nowadays displays.
 vim.opt.textwidth = 120
@@ -170,6 +174,15 @@ vim.keymap.set('n', '<leader>gk', "<Cmd>call append(line('.') - 1,  repeat([''],
 
 
 
+vim.api.nvim_create_user_command("DiagnosticToggle", function()
+	local config = vim.diagnostic.config
+	local vt = config().virtual_text
+	config {
+		virtual_text = not vt,
+		underline = not vt,
+		signs = not vt,
+	}
+end, { desc = "toggle diagnostic" })
 
 
 
@@ -177,19 +190,19 @@ vim.keymap.set('n', '<leader>gk', "<Cmd>call append(line('.') - 1,  repeat([''],
 
 
 
+if (is_env_laptop_win) then 
+  ---- Set shell to MSYS2 bash.exe
+  vim.opt.shell = "C:/msys64/usr/bin/bash"
+  vim.opt.shellcmdflag = '-c'
+  vim.opt.shellquote = ''
+  vim.opt.shellxquote = ''
 
+  ---- Ensure shellslash is not set
+  vim.opt.shellslash = false
 
--- Set shell to MSYS2 bash.exe
-vim.opt.shell = "C:/msys64/usr/bin/bash"
-vim.opt.shellcmdflag = '-c'
-vim.opt.shellquote = ''
-vim.opt.shellxquote = ''
-
--- Ensure shellslash is not set
-vim.opt.shellslash = false
-
--- Add ripgrep to the PATH
-vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
+  ---- Add ripgrep to the PATH
+  vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
+end
 
 
 
