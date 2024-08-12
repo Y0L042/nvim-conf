@@ -1,6 +1,10 @@
-local is_env_laptop_win = os.getenv("COMPUTER_ID") == 01
-local is_env_laptop_wsl2 = os.getenv("COMPUTER_ID") == 11
-local is_env_narga = os.getenv("COMPUTER_ID") == 101
+_G.is_env_laptop_win = os.getenv("COMPUTER_ID") == 01
+_G.is_env_laptop_wsl2 = os.getenv("COMPUTER_ID") == 11
+_G.is_env_narga = os.getenv("COMPUTER_ID") == 101
+
+-- disable netrw at the very start of your init.lua FOR NVIM-TREE PLUGIN
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
 -- Set UTF-8 encoding
 vim.opt.encoding = "utf-8"
@@ -11,7 +15,7 @@ vim.opt.fileencoding = "utf-8"
 vim.opt.compatible = false
 
 -- Use indentation of previous line
-vim.opt.autoindent = true
+vim.opt.autoindent = true 
 
 -- Use intelligent indentation for C
 vim.opt.smartindent = true
@@ -23,15 +27,13 @@ vim.opt.shiftwidth = 4    -- Indent also with 4 spaces
 vim.opt.expandtab = false  -- Expand tabs to spaces
 
 -- Wrap lines at 120 chars. 80 is somewhat antiquated with nowadays displays.
-vim.opt.textwidth = 120
+vim.opt.textwidth = 80
 
 -- Turn syntax highlighting on
 vim.cmd('syntax on')
 
 -- Use ctag generated tags
-vim.opt.tags = './tags;/'
--- Uncomment if you have this colorscheme
--- vim.cmd('colorscheme wombat256')
+vim.opt.tags = './.tags;/'
 
 -- Turn line numbers on
 vim.opt.number = true
@@ -74,12 +76,12 @@ vim.api.nvim_set_keymap('n', '<F9>', ':set wrap!<CR>:echo "Word wrap: " .. (vim.
 vim.opt.cursorline = true
 
 -- Reset the cursor on start (for older versions of vim, usually not required)
-vim.cmd([[
-  augroup myCmds
-    au!
-    autocmd VimEnter * silent !echo -ne "\e[2 q"
-  augroup END
-]])
+-- vim.cmd([[
+--   augroup myCmds
+--     au!
+--     autocmd VimEnter * silent !echo -ne "\e[2 q"
+--   augroup END
+-- ]])
 
 -- Enhanced keyboard mappings
 
@@ -160,7 +162,7 @@ vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = 
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- Set the timeout length for leader key sequences
-vim.opt.timeoutlen = 2000  -- Adjust this value as needed, 1000 ms = 1 second
+vim.opt.timeoutlen = 1500  -- Adjust this value as needed, 1000 ms = 1 second
 
 -- Add empty lines before and after cursor line
 vim.keymap.set('n', '<leader>gj', "<Cmd>call append(line('.'),      repeat([''], v:count1))<CR>", { noremap = true, silent = true })
@@ -244,10 +246,6 @@ vim.opt.signcolumn = 'yes'
 
 -- Decrease update time
 vim.opt.updatetime = 250
-
--- Decrease mapped sequence wait time
--- Displays which-key popup sooner
-vim.opt.timeoutlen = 300
 
 -- Configure how new splits should be opened
 vim.opt.splitright = true

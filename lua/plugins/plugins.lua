@@ -197,8 +197,10 @@ return {
     'dyng/ctrlsf.vim',
     config = function()
       -- Configure ctrlsf.vim here
-      vim.g.ctrlsf_backend = 'rg'
-      vim.g.ctrlsf_backend_program = 'C:\\msys64\\ucrt64\\bin\\rg.exe'  -- Update this path to your rg.exe location
+      if is_env_laptop_win or is_env_laptop_wsl2 then
+        vim.g.ctrlsf_backend = 'rg'
+        vim.g.ctrlsf_backend_program = 'C:\\msys64\\ucrt64\\bin\\rg.exe'  -- Update this path to your rg.exe location
+      end
       vim.g.ctrlsf_default_root = 'project'
       vim.g.ctrlsf_auto_close = 1
       vim.g.ctrlsf_position = 'bottom'
@@ -227,6 +229,52 @@ return {
   },
 
 
+
+
+
+
+
+
+
+  {
+    "nvim-tree/nvim-web-devicons"
+  },
+
+  {
+    "nvim-tree/nvim-tree.lua",
+    version = "*",
+    lazy = false,
+    dependencies = {
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("nvim-tree").setup {
+        filters = {
+          dotfiles = false,
+        },
+        git = {
+          enable = true,
+        },
+        renderer = {
+          icons = {
+            show = {
+            git = true,
+            file = true,
+            folder = true,
+            folder_arrow = true,
+          },
+        },
+      },
+      view = {
+        width = 30,
+        side = 'left',
+      },
+    }
+
+      vim.api.nvim_set_keymap('n', '<C-n>', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+
+    end,
+  },
 
 
 
