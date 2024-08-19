@@ -1,5 +1,32 @@
 -- plugins.lua
 
+local function install_cascadia_mono()
+  -- Check if Cascadia Mono is installed
+  local font_installed = os.execute("fc-list | grep -i 'Cascadia Mono' > /dev/null 2>&1")
+  
+  if font_installed ~= 0 then
+    -- Cascadia Mono is not installed, so install it
+    print("Cascadia Mono font not found. Installing...")
+
+    os.execute([[
+      wget -q https://github.com/microsoft/cascadia-code/releases/download/v2306.17/CascadiaCode-2306.17.zip -O /tmp/CascadiaCode.zip
+      unzip -q /tmp/CascadiaCode.zip -d /tmp/CascadiaCode
+      mkdir -p ~/.local/share/fonts
+      cp /tmp/CascadiaCode/ttf/*.ttf ~/.local/share/fonts/
+      fc-cache -fv ~/.local/share/fonts
+      rm -rf /tmp/CascadiaCode.zip /tmp/CascadiaCode
+    ]])
+    
+    print("Cascadia Mono font installed successfully.")
+  else
+    print("Cascadia Mono font is already installed.")
+  end
+end
+
+-- Call the function to check and install Cascadia Mono
+--install_cascadia_mono()
+
+
 return { 
   -- [[ Color Schemes ]]
   -- Add Gruvbox color scheme
@@ -233,6 +260,29 @@ return {
 
 
 
+  {
+    "wfxr/minimap.vim",
+    cmd = {
+		"Minimap", 
+		"MinimapClose", 
+		"MinimapToggle", 
+		"MinimapRefresh", 
+		"MinimapUpdateHighlight"
+	},
+	  keys = {
+		{ "<A-m>", ":MinimapToggle<CR>", mode = "n", noremap = true, silent = true }
+	  },
+    config = function()
+	  vim.g.minimap_left = 0
+      vim.g.minimap_width = 10
+      vim.g.minimap_auto_start = 1
+      vim.g.minimap_auto_start_win_enter = 1
+	  vim.g.minimap_block_filetypes = {'NvimTree_1', 'nvimtree', 'netrw', 'lazy', 'NvimTree'}
+	  vim.g.minimap_close_filetypes = {'NvimTree_1', 'nvimtree', 'netrw', 'lazy', 'NvimTree'}
+	  vim.g.minimap_block_bufftypes = {'NvimTree_1', 'nofile'}
+	  vim.g.minimap_close_bufftypes = {'NvimTree_1', 'nofile'}
+    end
+  },
 
 
 
@@ -285,7 +335,6 @@ return {
 
     end,
   },
-
 
 
 
