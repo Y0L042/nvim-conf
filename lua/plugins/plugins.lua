@@ -348,9 +348,21 @@ return {
 
 
 
+	{
+		"numToStr/Comment.nvim",
+		opts = {
+			-- add any options here
+		},
+		lazy = false,
+	},
 
+	{ 
+		"folke/flash.nvim"
+	},
 
-
+	{
+    "lewis6991/gitsigns.nvim"
+	},
 
 
 --  -- [[ Mason ]]
