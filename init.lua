@@ -208,8 +208,26 @@ end
 
 
 
+local function clear_shada_files()
+    -- Get the shada files' paths
+    local shada_files = vim.fn.glob(vim.fn.stdpath('data') .. '/*.*', 1, 1)
 
+    -- Delete each shada file
+    for _, file in ipairs(shada_files) do
+        vim.fn.delete(file)
+    end
 
+    -- Reload Neovim
+    vim.cmd('silent! wa')  -- Save all files
+    vim.cmd('silent! qall!')  -- Quit all windows
+    vim.cmd('silent! edit')  -- Reopen the current file
+end
+
+-- Map the function to a command for easy use
+vim.api.nvim_create_user_command('ClearShada', clear_shada_files, {})
+
+-- Insert current time and date
+vim.api.nvim_set_keymap('n', '<leader>dt', [[a @<C-R>=strftime("%H:%M %a, %d %b %Y")<CR><Esc>]], { noremap = true, silent = true })
 
 
 
