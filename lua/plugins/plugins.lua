@@ -222,6 +222,7 @@ return {
   -- Add ctrlsf.vim
   {
     'dyng/ctrlsf.vim',
+		lazy = true,
     config = function()
       -- Configure ctrlsf.vim here
       if is_env_laptop_win or is_env_laptop_wsl2 then
@@ -262,6 +263,7 @@ return {
 
   {
     "wfxr/minimap.vim",
+		lazy = true,
     cmd = {
 		"Minimap", 
 		"MinimapClose", 
@@ -425,6 +427,103 @@ return {
 	  event = "VeryLazy",
 	  opts = {},
 	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  -- [[ Mason ]]
+ {
+   "williamboman/mason.nvim",
+   config = function()
+     require("mason").setup {}
+   end,
+ },
+ -- Add mason-lspconfig to automatically install LSP servers
+ {
+   "williamboman/mason-lspconfig.nvim",
+		lazy = true,
+   config = function()
+     require("mason-lspconfig").setup({
+       ensure_installed = { "clangd" },
+     })
+   end,
+ },
+
+  -- Add nvim-lspconfig
+  {
+    'neovim/nvim-lspconfig',
+    config = function()
+      require'lspconfig'.clangd.setup{
+        settings = {
+          clangd = {
+            InlayHints = {
+              Designators = true,
+              Enabled = true,
+              ParameterNames = true,
+              DeducedTypes = true,
+            },
+            fallbackFlags = { "-std=c99" },
+          },
+        },
+		  root_dir = require('lspconfig').util.root_pattern('compile_commands.json', '.git'),
+      }
+
+	vim.keymap.set('n', '<leader>td', function()
+	  vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+	end, { silent = false, noremap = true })
+	vim.diagnostic.enable(false)
+    vim.keymap.set('i', '<C-A>', vim.lsp.buf.signature_help, { silent = true, noremap = true })
+    end
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
