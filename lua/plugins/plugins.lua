@@ -102,6 +102,17 @@ return {
           additional_vim_regex_highlighting = false,
         },
       }
+
+		-- cindent prevents textwidth from working. treesitter#indent does not
+		vim.opt.cindent = false
+		vim.opt.indentexpr = 'nvim_treesitter#indent()'
+		  vim.opt.foldmethod = "expr"
+		  vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+		  vim.opt.foldcolumn = "0"
+		  vim.opt.foldtext = ""
+		  vim.opt.foldlevel = 99
+		  vim.opt.foldnestmax = 3
+
     end,
   },
 
@@ -153,24 +164,35 @@ return {
       -- Telescope picker. This is really useful to discover what Telescope can
       -- do as well as how to actually do it!
 
-      -- [[ Configure Telescope ]]
-      -- See `:help telescope` and `:help telescope.setup()`
-      require('telescope').setup {
-        -- You can put your default mappings / updates / etc. in here
-        --  All the info you're looking for is in `:help telescope.setup()`
-        --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
-        -- pickers = {}
-        extensions = {
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
+        -- [[ Configure Telescope ]]
+        -- See `:help telescope` and `:help telescope.setup()`
+        local actions = require('telescope.actions')
+        require('telescope').setup {
+          -- You can put your default mappings / updates / etc. in here
+          -- All the info you're looking for is in `:help telescope.setup()`
+          defaults = {
+            -- Default configuration options
+            prompt_prefix = "🔍 ",
+            selection_caret = "➤ ",
+            path_display = { "smart" },
+            mappings = {
+              -- Mappings for insert mode
+              i = {
+                -- You can add more custom mappings here
+              },
+              -- Mappings for normal mode
+              n = {
+                ["<A-v>"] = actions.file_vsplit,   -- Open in vertical split
+              },
+            },
           },
-        },
-      }
+          -- Move `extensions` outside of `defaults`
+          extensions = {
+            ['ui-select'] = {
+              require('telescope.themes').get_dropdown(),
+            },
+          },
+        }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
@@ -428,6 +450,38 @@ return {
 	  opts = {},
 	},
 
+  {
+    'abecodes/tabout.nvim',
+    lazy = false,
+    config = function()
+      require('tabout').setup {
+        tabkey = '<Tab>', -- key to trigger tabout, set to an empty string to disable
+        backwards_tabkey = '<S-Tab>', -- key to trigger backwards tabout, set to an empty string to disable
+        act_as_tab = true, -- shift content if tab out is not possible
+        act_as_shift_tab = false, -- reverse shift content if tab out is not possible (if your keyboard/terminal supports <S-Tab>)
+        default_tab = '<C-t>', -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
+        default_shift_tab = '<C-d>', -- reverse shift default action,
+        enable_backwards = true, -- well ...
+        completion = false, -- if the tabkey is used in a completion pum
+        tabouts = {
+          { open = "'", close = "'" },
+          { open = '"', close = '"' },
+          { open = '`', close = '`' },
+          { open = '(', close = ')' },
+          { open = '[', close = ']' },
+          { open = '{', close = '}' }
+        },
+        ignore_beginning = true, --[[ if the cursor is at the beginning of a filled element it will rather tab out than shift the content ]]
+        exclude = {} -- tabout will ignore these filetypes
+      }
+    end,
+    dependencies = { -- These are optional
+      "nvim-treesitter/nvim-treesitter",
+    },
+    opt = true,  -- Set this to true if the plugin is optional
+    event = 'InsertCharPre', -- Set the event to 'InsertCharPre' for better compatibility
+    priority = 1000,
+  },
 
 
 
@@ -470,11 +524,13 @@ return {
    end,
  },
 
+
   -- Add nvim-lspconfig
   {
     'neovim/nvim-lspconfig',
     config = function()
       require'lspconfig'.clangd.setup{
+		cmd = { "clangd", '--background-index', '--clang-tidy' },
         settings = {
           clangd = {
             InlayHints = {
@@ -486,16 +542,115 @@ return {
             fallbackFlags = { "-std=c99" },
           },
         },
-		  root_dir = require('lspconfig').util.root_pattern('compile_commands.json', '.git'),
+		  root_dir = require('lspconfig').util.root_pattern('compile_commands.json', '.git', '.clangd', '.clang-format'),
       }
+	  
+	  require("lspconfig").matlab_ls.setup({
+		  single_file_support = true,
+			settings = {
+				matlab = {
+					installPath = '/path/to/MATLAB',  -- Example: '/Applications/MATLAB_R2023b.app'
+					telemetry = false,
+				},
+			},
+	  })
 
-	vim.keymap.set('n', '<leader>td', function()
-	  vim.diagnostic.enable(not vim.diagnostic.is_enabled())
-	end, { silent = false, noremap = true })
-	vim.diagnostic.enable(false)
-    vim.keymap.set('i', '<C-A>', vim.lsp.buf.signature_help, { silent = true, noremap = true })
+
+      local gdscript_config = {
+          capabilities = capabilities,
+          settings = {},
+      }
+      if vim.fn.has 'win32' == 1 then
+          gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv 'GDScript_Port' or '6005' }
+      end
+    require('lspconfig').gdscript.setup(gdscript_config)
+
+    -- Key mappings for diagnostics
+    local diagnostics_enabled = true
+    vim.keymap.set('n', '<leader>td', function()
+      if diagnostics_enabled then
+        vim.diagnostic.disable()  -- Disable diagnostics
+      else
+        vim.diagnostic.enable()   -- Enable diagnostics
+      end
+      diagnostics_enabled = not diagnostics_enabled
+    end, { silent = false, noremap = true })
+    -- Additional diagnostics config if needed
+    vim.diagnostic.config({
+      virtual_text = true,
+      signs = false,
+      update_in_insert = false,
+      underline = true,
+	  severity_sort = true,
+    })
+
+    vim.keymap.set('i', '<C-A>', vim.lsp.buf.signature_help, { silent = false, noremap = true })
+
+	-- Go to definition (function definition in C)
+    -- vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { silent = true, noremap = true })
+
+    -- Go to definition (redundant with 'gd', but provided as per request)
+    vim.keymap.set('n', '<leader>gdd', vim.lsp.buf.definition, { silent = true, noremap = true })
+
+    -- Go to definition in horizontal split below
+    vim.keymap.set('n', '<leader>gds', function()
+      vim.cmd('split')  -- Open a horizontal split
+      vim.lsp.buf.definition()
+    end, { silent = true, noremap = true })
+
+    -- Go to definition in vertical split to the right
+    vim.keymap.set('n', '<leader>gdv', function()
+      vim.cmd('vsplit')  -- Open a vertical split
+      vim.lsp.buf.definition()
+    end, { silent = true, noremap = true })
+
+	vim.keymap.set("n", "]ge", vim.diagnostic.goto_next)
+	vim.keymap.set("n", "[ge", vim.diagnostic.goto_prev)
+
+    -- Key mappings for manual formatting and style checking
+    vim.api.nvim_set_keymap("n", "<leader>cf", ":lua vim.lsp.buf.format()<CR>", { noremap = true, silent = false })  -- Manual format
+
+    -- Function to populate the location list with diagnostics
+    local function PopulateLocationList()
+        vim.diagnostic.setloclist({ open = true })
+        vim.cmd("botright 10lopen")
+        vim.cmd("wincmd J")
+    end
+    -- Map <leader>l to populate and open the location list
+    vim.keymap.set('n', '<leader>l', PopulateLocationList, { noremap = true, silent = true })
+
+
+
+       -- ==== Basic Rename Function Start ====
+        -- Basic Rename Function with Confirmation
+        local function RenameWithConfirmation()
+            -- Prompt the user for the new name
+            vim.ui.input({ prompt = "Rename to: " }, function(new_name)
+                -- Check if the user provided a non-empty name
+                if new_name and new_name ~= "" then
+                    -- Perform the rename using LSP
+                    vim.lsp.buf.rename(new_name)
+                else
+                    -- Notify the user that the rename was cancelled
+                    vim.notify("Rename cancelled.", vim.log.levels.WARN)
+                end
+            end)
+        end
+
+        -- Map the Rename function to a keybinding
+        vim.keymap.set('n', '<leader>rn', RenameWithConfirmation, {
+            noremap = true,
+            silent = true,
+            desc = "Rename Symbol with Confirmation",
+        })
+        -- ==== Basic Rename Function End ====
+
     end
   },
+
+
+
+
 
 
 

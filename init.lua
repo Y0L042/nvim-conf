@@ -2,6 +2,10 @@ _G.is_env_laptop_win = os.getenv("COMPUTER_ID") == 01
 _G.is_env_laptop_wsl2 = os.getenv("COMPUTER_ID") == 11
 _G.is_env_narga = os.getenv("COMPUTER_ID") == 101
 
+-- Enable loading of local configuration files (.nvim.lua, .nvimrc, etc.)
+vim.o.exrc = true        -- Enable reading of local config files (like .nvim.lua)
+vim.o.secure = true      -- Ensure safe mode for untrusted configs
+
 -- disable netrw at the very start of your init.lua FOR NVIM-TREE PLUGIN
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -24,7 +28,8 @@ vim.opt.backspace = { 'indent', 'eol', 'start' }
 -- Configure tab width and insert spaces instead of tabs
 vim.opt.tabstop = 4       -- Tab width is 4 spaces
 vim.opt.shiftwidth = 4    -- Indent also with 4 spaces
-vim.opt.expandtab = false  -- Expand tabs to spaces
+vim.opt.softtabstop = 4    
+vim.opt.expandtab = true  -- Expand tabs to spaces
 
 -- Wrap lines at 120 chars. 80 is somewhat antiquated with nowadays displays.
 vim.opt.textwidth = 80
@@ -67,7 +72,7 @@ vim.opt.wildmode = { 'list', 'longest' }
 vim.opt.wildignore = { '*.docx', '*.jpg', '*.png', '*.gif', '*.pdf', '*.pyc', '*.exe', '*.flv', '*.img', '*.xlsx' }
 
 -- Toggle word wrap with F9
-vim.api.nvim_set_keymap('n', '<F9>', ':set wrap!<CR>:echo "Word wrap: " .. (vim.opt.wrap:get() and "ON" or "OFF")<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<F9>', ':set wrap!<CR>', { noremap = true, silent = true })
 
 -- Set cursor shape
 -- vim.opt.guicursor = 'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50'
@@ -204,6 +209,8 @@ if (is_env_laptop_win) then
 
   ---- Add ripgrep to the PATH
   vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
+
+  vim.env.PATH = "/ucrt64/bin:" .. vim.env.PATH
 end
 
 
@@ -259,6 +266,12 @@ vim.schedule(function()
     vim.opt.clipboard = 'unnamedplus'
   end)
 
+-- vim.opt.formatexpr = nil
+vim.opt.formatoptions = vim.opt.formatoptions + 't'
+vim.opt.formatoptions = vim.opt.formatoptions - 'l'
+vim.opt.formatoptions = vim.opt.formatoptions - 'o'
+-- vim.opt.cindent = false
+
 -- Keep signcolumn on by default
 vim.opt.signcolumn = 'yes'
 
@@ -304,4 +317,33 @@ vim.api.nvim_create_user_command('E', 'Explore', {})
 
 
 
-
+-- File-specific Settings
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "nasm", "asm" },
+    callback = function()
+        -- Set settings for web-related files
+        vim.opt_local.shiftwidth = 2
+        vim.opt_local.tabstop = 2
+        vim.opt_local.expandtab = true
+    end,
+})
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "c" },
+    callback = function()
+        -- Set settings for web-related files
+        vim.opt_local.shiftwidth = 4
+        vim.opt_local.tabstop = 4
+        vim.opt_local.softtabstop = 4
+        vim.opt_local.expandtab = true
+    end,
+})
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "gd", "tres", "tscn" },
+    callback = function()
+        -- Set settings for web-related files
+        vim.opt_local.shiftwidth = 4
+        vim.opt_local.tabstop = 4
+        vim.opt_local.softtabstop = 4
+        vim.opt_local.expandtab = false
+    end,
+})
