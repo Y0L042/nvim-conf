@@ -483,6 +483,34 @@ return {
     priority = 1000,
   },
 
+    { 
+        'Bekaboo/deadcolumn.nvim',
+        config = function()
+            local opts = {
+                scope = 'buffer', ---@type string|fun(): integer
+                ---@type string[]|fun(mode: string): boolean
+                modes = function(mode)
+                    return mode:find('^[nictRss\x13]') ~= nil
+                end,
+                blending = {
+                    threshold = 0.1,
+                    colorcode = '#000000',
+                    hlgroup = { 'Normal', 'bg' } -- { 'Normal', 'bg' },
+                },
+                warning = {
+                    alpha = 0.4,
+                    offset = 0,
+                    colorcode = '#FF0000',
+                    hlgroup = { 'Error', 'bg' },
+                },
+                extra = {
+                    ---@type string?
+                    follow_tw = nil,
+                },
+            }
+            require('deadcolumn').setup(opts) -- Call the setup function
+        end,
+    },
 
 
 
@@ -649,7 +677,52 @@ return {
   },
 
 
+  -- Add nvim-cmp and its dependencies
+  {
+    "hrsh7th/nvim-cmp", -- Completion plugin
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp", -- LSP source for nvim-cmp
+      "hrsh7th/cmp-buffer", -- Buffer completion source
+      "hrsh7th/cmp-path", -- Path completion source
+      "hrsh7th/cmp-cmdline", -- Command line completion source
+      "hrsh7th/cmp-vsnip", -- Snippet completion source
+      "hrsh7th/vim-vsnip", -- Snippet engine
+    },
+    config = function()
+      -- Set up nvim-cmp
+      local cmp = require'cmp'
+      
+      cmp.setup({
+        completion = {
+            autocomplete = false,
+        },
+        snippet = {
+          expand = function(args)
+            require('vsnip').expand(args.body) -- For vsnip users.
+          end,
+        },
+        mapping = {
+          ['<C-N>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
+          ['<C-k>'] = cmp.mapping.select_prev_item(), -- Navigate to previous completion item
+          ['<C-j>'] = cmp.mapping.select_next_item(), -- Navigate to next completion item
+          ['<C-e>'] = cmp.mapping.close(), -- Close completion window
+          ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Confirm completion
+        },
+        sources = {
+          { name = 'nvim_lsp' }, -- LSP completion
+          { name = 'buffer' }, -- Buffer completion
+          { name = 'path' }, -- Path completion
+        },
+      })
 
+      -- Configure command line completion
+      cmp.setup.cmdline(':', {
+        sources = {
+          { name = 'cmdline' }
+        }
+      })
+    end,
+  },
 
 
 

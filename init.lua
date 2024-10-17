@@ -31,8 +31,10 @@ vim.opt.shiftwidth = 4    -- Indent also with 4 spaces
 vim.opt.softtabstop = 4    
 vim.opt.expandtab = true  -- Expand tabs to spaces
 
--- Wrap lines at 120 chars. 80 is somewhat antiquated with nowadays displays.
+-- Wrap lines at 80 chars.
 vim.opt.textwidth = 80
+vim.opt.colorcolumn = "79"
+
 
 -- Turn syntax highlighting on
 vim.cmd('syntax on')
