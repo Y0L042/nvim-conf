@@ -4,7 +4,7 @@ _G.is_env_narga = os.getenv("COMPUTER_ID") == 101
 
 -- Enable loading of local configuration files (.nvim.lua, .nvimrc, etc.)
 vim.o.exrc = true        -- Enable reading of local config files (like .nvim.lua)
-vim.o.secure = true      -- Ensure safe mode for untrusted configs
+-- vim.o.secure = true      -- Ensure safe mode for untrusted configs
 
 -- disable netrw at the very start of your init.lua FOR NVIM-TREE PLUGIN
 vim.g.loaded_netrw = 1
@@ -33,7 +33,7 @@ vim.opt.expandtab = true  -- Expand tabs to spaces
 
 -- Wrap lines at 80 chars.
 vim.opt.textwidth = 80
-vim.opt.colorcolumn = "79"
+vim.opt.colorcolumn = "81"
 
 
 -- Turn syntax highlighting on
@@ -112,15 +112,6 @@ vim.api.nvim_set_keymap('v', '<S-F4>', [[y:let @/ = @0<CR>:update<CR>:e %:p:s,.h
 _G.is_netrw = function()
   return vim.bo.filetype == 'netrw'
 end
-
--- Define the key mapping to save changes, close the buffer, and open netrw but only if the current buffer is not netrw
-vim.cmd([[
-  augroup NetrwMappings
-    autocmd!
-    autocmd FileType * if luaeval("is_netrw()") == 0 | nnoremap <buffer> <F1> :update<bar>bd<bar>Explore<CR> | inoremap <buffer> <F1> <ESC>:update<bar>bd<bar>Explore<CR> | endif
-    autocmd FileType netrw nnoremap <buffer> <F1> <Nop>
-  augroup END
-]])
 
 -- Go to definition with F12
 vim.api.nvim_set_keymap('n', '<F12>', '<C-]>', { noremap = true, silent = true })
@@ -326,9 +317,11 @@ vim.api.nvim_create_autocmd("FileType", {
         -- Set settings for web-related files
         vim.opt_local.shiftwidth = 2
         vim.opt_local.tabstop = 2
+        vim.opt_local.commentstring = ';'       
         vim.opt_local.expandtab = true
     end,
 })
+
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "c" },
     callback = function()
@@ -339,6 +332,7 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.opt_local.expandtab = true
     end,
 })
+
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "gd", "tres", "tscn" },
     callback = function()
@@ -349,3 +343,8 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.opt_local.expandtab = false
     end,
 })
+
+
+
+
+
