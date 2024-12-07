@@ -103,15 +103,15 @@ return {
         },
       }
 
-		-- cindent prevents textwidth from working. treesitter#indent does not
-		vim.opt.cindent = false
-		vim.opt.indentexpr = 'nvim_treesitter#indent()'
-		  vim.opt.foldmethod = "expr"
-		  vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-		  vim.opt.foldcolumn = "0"
-		  vim.opt.foldtext = ""
-		  vim.opt.foldlevel = 99
-		  vim.opt.foldnestmax = 3
+      -- cindent prevents textwidth from working. treesitter#indent does not
+      -- vim.opt.cindent = false
+      -- vim.opt.indentexpr = 'nvim_treesitter#indent()'
+      -- vim.opt.foldmethod = "expr"
+      -- vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+      -- vim.opt.foldcolumn = "0"
+      -- vim.opt.foldtext = ""
+      -- vim.opt.foldlevel = 99
+      -- vim.opt.foldnestmax = 3
 
     end,
   },
@@ -164,28 +164,108 @@ return {
       -- Telescope picker. This is really useful to discover what Telescope can
       -- do as well as how to actually do it!
 
+        local ignore_patterns = {
+          "%.exe$", "%.dll$", "%.so$", "%.dylib$",
+          "%.o$", "%.obj$", "%.log$", "%.pdb$",
+          "%.cmake$", "%.sln$", "%.vcxproj$", "%.vcxproj%.user$",
+          "%.git/", "%.svn/", "%.idea/", "%.vscode/",
+          "build/", "bin/", "out/", "dist/",
+          "%.tmp$", "%.bak$", "%.tlog", "%.idb", "%.sarif"
+        }
+
+        local allow_patterns = {
+          -- Source code files
+          "*.lua",        -- Lua files
+          "*.py",         -- Python files
+          "*.js",         -- JavaScript files
+          "*.ts",         -- TypeScript files
+          "*.html",       -- HTML files
+          "*.css",        -- CSS files
+          "*.scss",       -- SCSS files
+          "*.cpp",        -- C++ source files
+          "*.inl",
+          "*.gd",
+          "*.c",          -- C source files
+          "*.h",          -- C/C++ header files
+          "*.hpp",        -- C++ header files
+          "*.java",       -- Java files
+          "*.cs",         -- C# files
+          "*.rb",         -- Ruby files
+          "*.go",         -- Go files
+          "*.rs",         -- Rust files
+          "*.sh",         -- Shell scripts
+          "*.bat",        -- Batch files
+          "*.php",        -- PHP files
+          "*.dart",       -- Dart files
+          "*.swift",      -- Swift files
+
+          -- Configuration files
+          "*.json",       -- JSON files
+          "*.yaml",       -- YAML files
+          "*.yml",        -- YAML files
+          "*.toml",       -- TOML files
+          "*.ini",        -- INI configuration files
+          "*.cfg",        -- Configuration files
+          "*.env",        -- Environment variable files
+
+          -- Documentation files
+          "*.md",         -- Markdown files
+          "*.txt",        -- Plain text files
+          "*.rst",        -- reStructuredText files
+          "*.adoc",       -- AsciiDoc files
+
+          -- Build files
+          "Makefile",     -- Makefile
+          "*.mk",         -- Additional Makefile fragments
+          "*.cmake",      -- CMake files
+          "*.gradle",     -- Gradle build files
+          "*.pom",        -- Maven POM files
+
+          -- Version control and meta files
+          ".gitignore",   -- Git ignore files
+          "*.gitattributes", -- Git attributes
+          "*.gitmodules", -- Git submodules
+
+          -- Directories
+          "src/**",       -- Source code folder
+          "docs/**",      -- Documentation folder
+          "tests/**",     -- Test cases
+          "examples/**",  -- Example files
+          "scripts/**",   -- Scripts directory
+
+          -- Miscellaneous
+          "*.csv",        -- CSV files
+          "*.tsv",        -- Tab-separated files
+          "*.xml",        -- XML files
+          "*.sql",        -- SQL files
+          "*.log",        -- Log files
+        }
+
         -- [[ Configure Telescope ]]
         -- See `:help telescope` and `:help telescope.setup()`
         local actions = require('telescope.actions')
         require('telescope').setup {
-          -- You can put your default mappings / updates / etc. in here
-          -- All the info you're looking for is in `:help telescope.setup()`
           defaults = {
-            -- Default configuration options
             prompt_prefix = "🔍 ",
             selection_caret = "➤ ",
             path_display = { "smart" },
+            file_ignore_patterns = ignore_patterns,
+            vimgrep_arguments = vim.tbl_flatten({
+              "rg",  -- Use Ripgrep as the underlying search tool
+              "--hidden",
+              "--no-ignore",
+              vim.tbl_map(function(pattern)
+                return { "--glob", pattern }
+              end, allow_patterns)
+            }),
             mappings = {
-              -- Mappings for insert mode
-              i = {
-                -- You can add more custom mappings here
-              },
-              -- Mappings for normal mode
+              i = {},
               n = {
                 ["<A-v>"] = actions.file_vsplit,   -- Open in vertical split
               },
             },
           },
+
           -- Move `extensions` outside of `defaults`
           extensions = {
             ['ui-select'] = {
@@ -202,14 +282,77 @@ return {
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      -- vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>sj', builtin.jumplist, { desc = '[S]earch [J]umps' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+
+      vim.keymap.set('n', '<leader>sD', builtin.lsp_definitions, { desc = '[S]earch LSP [D]efinitions' })
+      vim.keymap.set('n', '<leader>sT', builtin.lsp_type_definitions, { desc = '[S]earch LSP [T]ype definitions' })
+      vim.keymap.set('n', '<leader>sR', builtin.lsp_references, { desc = '[S]earch LSP [R]erences' })
+      vim.keymap.set('n', '<leader>sI', builtin.lsp_implementations, { desc = '[S]earch LSP [I]mplementations' })
+
+    vim.keymap.set('n', '<leader>sf', function()
+      require('telescope.builtin').find_files {
+        hidden = true,
+        no_ignore = true,
+        additional_args = function()
+          local args = {}
+          for _, pattern in ipairs(allow_patterns) do
+            table.insert(args, "--glob")
+            table.insert(args, pattern)
+          end
+          return args
+        end,
+      }
+    end, { desc = '[S]earch [F]iles (allow-only)' })
+    -- vim.keymap.set('n', '<leader>sf', function()
+    --   require('telescope.builtin').find_files {
+    --     hidden = true,
+    --     no_ignore = true,
+    --     file_ignore_patterns = ignore_patterns,
+    --   }
+    -- end, { desc = '[S]earch [F]iles (excluding build artifacts)' })
+
+
+
+        vim.keymap.set('n', '<leader>sg', function()
+          require('telescope.builtin').live_grep {
+            additional_args = function()
+              local args = {}
+              for _, pattern in ipairs(allow_patterns) do
+                table.insert(args, "--glob")
+                table.insert(args, pattern)
+              end
+              return args
+            end,
+          }
+        end, { desc = '[S]earch by [G]rep (allow-only)' })
+        -- vim.keymap.set('n', '<leader>sg', function()
+        --   require('telescope.builtin').live_grep {
+        --     additional_args = function()
+        --       local args = { "--hidden", "--no-ignore" }
+        --       for _, pattern in ipairs(ignore_patterns) do
+        --         table.insert(args, "--glob")
+        --         table.insert(args, "!" .. pattern)
+        --       end
+        --       return args
+        --     end,
+        --   }
+        -- end, { desc = '[S]earch by [G]rep (excluding build artifacts)' })
+      -- vim.keymap.set('n', '<leader>sg', function()
+      --   require('telescope.builtin').live_grep {
+      --     additional_args = function()
+      --       return { "--no-ignore", "--hidden" }
+      --     end,
+      --   }
+      -- end, { desc = '[S]earch by [G]rep (include hidden and ignored files)' })
+
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -314,55 +457,95 @@ return {
     "nvim-tree/nvim-web-devicons"
   },
 
-  {
-    "nvim-tree/nvim-tree.lua",
-    version = "*",
-    lazy = false,
-    dependencies = {
-      "nvim-tree/nvim-web-devicons",
-    },
-    config = function()
-      require("nvim-tree").setup {
-        filters = {
-          dotfiles = false,
-		  custom = {},
-        },
-        git = {
-          enable = true,
-		  ignore = false,
-        },
-        renderer = {
-          icons = {
-            show = {
+{
+  "nvim-tree/nvim-tree.lua",
+  version = "*",
+  lazy = false,
+  dependencies = {
+    "nvim-tree/nvim-web-devicons",
+  },
+  config = function()
+    -- Custom file name formatter
+    local function custom_name_formatter(name)
+      local max_len = 20 -- Set the max length for file names
+      if #name <= max_len then
+        return name
+      end
+      local ext_index = name:find("%.[^%.]*$") or #name + 1
+      local prefix = name:sub(1, math.floor(max_len / 2) - 3) -- Beginning part
+      local suffix = name:sub(ext_index - (math.floor(max_len / 2) - 3)) -- End part + extension
+      return prefix .. "..." .. suffix
+    end
+
+    local function label(path)
+      path = path:gsub(os.getenv 'HOME', '~', 1)
+      return path:gsub('([a-zA-Z])[a-z0-9]+', '%1') .. 
+        (path:match '[a-zA-Z]([a-z0-9]*)$' or '')
+    end
+    local api = require 'nvim-tree.api'
+
+    require("nvim-tree").setup {
+      filters = {
+        dotfiles = false,
+        custom = {},
+      },
+      git = {
+        enable = true,
+        ignore = false,
+      },
+      renderer = {
+        icons = {
+          show = {
             git = true,
             file = true,
             folder = true,
             folder_arrow = true,
           },
         },
+        highlight_opened_files = "name",
+        highlight_git = true,
       },
       view = {
-        width = 30,
-        side = 'left',
-		number = true,
-		relativenumber = true,
+        adaptive_size = true,
+        width = { 
+            min = 30,
+            max = 75,
+        },
+        side = "left",
+        number = true,
+        relativenumber = true,
       },
       on_attach = function(bufnr)
-        local api = require('nvim-tree.api')
+        local api = require("nvim-tree.api")
 
         -- Default mappings
         api.config.mappings.default_on_attach(bufnr)
 
         -- Custom mappings
-        vim.keymap.set('n', '<A-v>', api.node.open.vertical, { buffer = bufnr, noremap = true, silent = true })
-        vim.keymap.set('n', '<A-s>', api.node.open.horizontal, { buffer = bufnr, noremap = true, silent = true })
+        vim.keymap.set("n", "<A-v>", api.node.open.vertical, { buffer = bufnr, noremap = true, silent = true })
+        vim.keymap.set("n", "<A-s>", api.node.open.horizontal, { buffer = bufnr, noremap = true, silent = true })
+
+        -- Update status line with hovered file name
+        local function update_statusline()
+          local node = api.tree.get_node_under_cursor()
+          if node and node.name then
+            vim.cmd("echo '" .. node.name .. "'")
+          else
+            vim.cmd("echo ''")
+          end
+        end
+
+        -- Hook into cursor movement
+        vim.api.nvim_create_autocmd("CursorMoved", {
+          buffer = bufnr,
+          callback = update_statusline,
+        })
       end,
     }
 
-      vim.api.nvim_set_keymap('n', '<A-n>', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
-
-    end,
-  },
+    vim.api.nvim_set_keymap("n", "<A-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+  end,
+};
 
 	{
 		'tpope/vim-surround',
@@ -455,12 +638,12 @@ return {
     lazy = false,
     config = function()
       require('tabout').setup {
-        tabkey = '<Tab>', -- key to trigger tabout, set to an empty string to disable
-        backwards_tabkey = '<S-Tab>', -- key to trigger backwards tabout, set to an empty string to disable
-        act_as_tab = true, -- shift content if tab out is not possible
+        tabkey = '<A-t>', -- key to trigger tabout, set to an empty string to disable
+        backwards_tabkey = '<A-S-t>', -- key to trigger backwards tabout, set to an empty string to disable
+        act_as_tab = false, -- shift content if tab out is not possible
         act_as_shift_tab = false, -- reverse shift content if tab out is not possible (if your keyboard/terminal supports <S-Tab>)
-        default_tab = '<C-t>', -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
-        default_shift_tab = '<C-d>', -- reverse shift default action,
+        default_tab = '<Tab>', -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
+        default_shift_tab = '<S-Tab>', -- reverse shift default action,
         enable_backwards = true, -- well ...
         completion = false, -- if the tabkey is used in a completion pum
         tabouts = {
@@ -471,7 +654,7 @@ return {
           { open = '[', close = ']' },
           { open = '{', close = '}' }
         },
-        ignore_beginning = true, --[[ if the cursor is at the beginning of a filled element it will rather tab out than shift the content ]]
+        ignore_beginning = false,
         exclude = {} -- tabout will ignore these filetypes
       }
     end,
@@ -482,6 +665,11 @@ return {
     event = 'InsertCharPre', -- Set the event to 'InsertCharPre' for better compatibility
     priority = 1000,
   },
+
+
+
+
+
 
     { 
         'Bekaboo/deadcolumn.nvim',
@@ -557,6 +745,7 @@ return {
   {
     'neovim/nvim-lspconfig',
     config = function()
+      require'lspconfig'.lua_ls.setup{}
       require'lspconfig'.clangd.setup{
 		cmd = { "clangd", '--background-index', '--clang-tidy' },
         settings = {
