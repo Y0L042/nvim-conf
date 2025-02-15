@@ -301,6 +301,23 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 vim.api.nvim_create_user_command('E', 'Explore', {})
 
 
+-- Define a function to toggle a semicolon at the end of the line
+_G.toggle_semicolon = function()
+    local line = vim.fn.getline('.')           -- Get the current line
+    local cursor_pos = vim.fn.col('.')         -- Save the cursor position
+    if line:match(";$") then
+        -- Remove semicolon if present
+        vim.fn.setline('.', line:sub(1, -2))
+    else
+        -- Add semicolon if absent
+        vim.fn.setline('.', line .. ';')
+    end
+    vim.fn.cursor(0, cursor_pos)               -- Restore cursor position
+end
+-- Map Alt+; in normal mode
+vim.api.nvim_set_keymap('n', '<A-;>', '<cmd>lua toggle_semicolon()<CR>', { noremap = true, silent = true })
+-- Map Alt+; in insert mode
+vim.api.nvim_set_keymap('i', '<A-;>', '<C-o><cmd>lua toggle_semicolon()<CR>', { noremap = true, silent = true })
 
 -- File-specific Settings
 vim.api.nvim_create_autocmd("FileType", {
@@ -433,5 +450,8 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.api.nvim_set_keymap('n', '<S-F4>', '<cmd>lua switch_and_search()<CR>', { noremap = true, silent = true })
         vim.api.nvim_set_keymap('i', '<S-F4>', '<Esc><cmd>lua switch_and_search()<CR>', { noremap = true, silent = true })
         vim.api.nvim_set_keymap('v', '<S-F4>', '<Esc><cmd>lua switch_and_search()<CR>', { noremap = true, silent = true })
+
+
+
     end,
 })
