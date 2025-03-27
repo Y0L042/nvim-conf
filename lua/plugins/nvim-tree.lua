@@ -91,6 +91,31 @@ return {
     }
 
     vim.api.nvim_set_keymap("n", "<A-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+
+    vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+      pattern = 'NvimTree*',
+      callback = function()
+        local api = require('nvim-tree.api')
+        local view = require('nvim-tree.view')
+
+        if not view.is_visible() then
+          api.tree.open()
+        end
+      end,
+    })
+
+
+    vim.api.nvim_create_autocmd("SessionLoadPost", {
+      callback = function()
+        vim.defer_fn(function() -- Defer to allow nvim-tree to initialize properly
+          local first_buf = vim.fn.bufname(vim.fn.bufnr("%"))  -- Get the name of the current (first) buffer
+          if first_buf ~= "" then  -- If there is a file open
+            vim.cmd("NvimTreeFindFile")  -- Run NvimTreeFindFile to highlight the file in nvim-tree
+          end
+        end, 500)  -- Adjust delay if necessary
+      end,
+    })
+
   end,
 };
 }

@@ -1,8 +1,10 @@
 return {
+
   -- [[ Mason ]]
  {
    "williamboman/mason.nvim",
-   lazy = true,
+   -- lazy = true,
+   event = "VeryLazy",
    config = function()
      require("mason").setup {}
    end,
@@ -10,7 +12,7 @@ return {
  -- Add mason-lspconfig to automatically install LSP servers
  {
    "williamboman/mason-lspconfig.nvim",
-		lazy = true,
+   event = "VeryLazy",
    config = function()
      require("mason-lspconfig").setup({
        ensure_installed = { "clangd" },
@@ -18,13 +20,26 @@ return {
    end,
  },
 
-
+{
+    'nvim-java/nvim-java',
+    lazy = true,
+    config = function()
+        require('java').setup()
+    end
+},
   -- Add nvim-lspconfig
   {
     'neovim/nvim-lspconfig',
-    lazy = true,
+    -- lazy = true,
+   event = "VeryLazy",
     config = function()
+        -- LUA
       require'lspconfig'.lua_ls.setup{}
+
+        -- JAVA
+        -- require('lspconfig').jdtls.setup({})
+
+        -- C/CPP
       require'lspconfig'.clangd.setup{
 		cmd = { "clangd", '--background-index', '--clang-tidy' },
         settings = {
@@ -40,26 +55,27 @@ return {
         },
 		  root_dir = require('lspconfig').util.root_pattern('compile_commands.json', '.git', '.clangd', '.clang-format'),
       }
-	  
-	  require("lspconfig").matlab_ls.setup({
-		  single_file_support = true,
-			settings = {
-				matlab = {
-					installPath = '/path/to/MATLAB',  -- Example: '/Applications/MATLAB_R2023b.app'
-					telemetry = false,
-				},
-			},
-	  })
 
+        -- MATLAB
+	  -- require("lspconfig").matlab_ls.setup({
+		 --  single_file_support = true,
+			-- settings = {
+			-- 	matlab = {
+			-- 		installPath = '/path/to/MATLAB',  -- Example: '/Applications/MATLAB_R2023b.app'
+			-- 		telemetry = false,
+			-- 	},
+			-- },
+	  -- })
 
-      local gdscript_config = {
-          capabilities = capabilities,
-          settings = {},
-      }
-      if vim.fn.has 'win32' == 1 then
-          gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv 'GDScript_Port' or '6005' }
-      end
-    require('lspconfig').gdscript.setup(gdscript_config)
+        -- GDSCRIPT
+    --   local gdscript_config = {
+    --       capabilities = capabilities,
+    --       settings = {},
+    --   }
+    --   if vim.fn.has 'win32' == 1 then
+    --       gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv 'GDScript_Port' or '6005' }
+    --   end
+    -- require('lspconfig').gdscript.setup(gdscript_config)
 
     -- Key mappings for diagnostics
     local diagnostics_enabled = true
@@ -81,6 +97,7 @@ return {
     })
 
     vim.keymap.set('i', '<C-A>', vim.lsp.buf.signature_help, { silent = false, noremap = true })
+    vim.keymap.set('n', '<C-A>', vim.lsp.buf.signature_help, { silent = false, noremap = true })
 
 	-- Go to definition (function definition in C)
     -- vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { silent = true, noremap = true })
@@ -148,7 +165,8 @@ return {
   -- Add nvim-cmp and its dependencies
   {
     "hrsh7th/nvim-cmp", -- Completion plugin
-    lazy = true,
+    -- lazy = true,
+   event = "VeryLazy",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp", -- LSP source for nvim-cmp
       "hrsh7th/cmp-buffer", -- Buffer completion source

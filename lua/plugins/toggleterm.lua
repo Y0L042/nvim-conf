@@ -5,11 +5,12 @@ return {
           version = "*",
           config = function()
               require("toggleterm").setup{
-                  direction = "float",
+                  direction = "horizontal",
                   autochdir = true,
+                  hide_numbers = false,
               }
 
-            vim.keymap.set({ 'n', 't' }, "<C-\\>", function ()
+            vim.keymap.set({ 'n', 't' }, "<leader>\\", function ()
                 local shellflag = vim.o.shellcmdflag
                 vim.o.shellcmdflag = '-s'
                 vim.cmd.ToggleTerm()
