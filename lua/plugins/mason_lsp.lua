@@ -78,7 +78,7 @@ return {
     -- require('lspconfig').gdscript.setup(gdscript_config)
 
     -- Key mappings for diagnostics
-    local diagnostics_enabled = true
+    local diagnostics_enabled = false -- False by default
     vim.keymap.set('n', '<leader>td', function()
       if diagnostics_enabled then
         vim.diagnostic.disable()  -- Disable diagnostics
