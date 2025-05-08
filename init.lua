@@ -1,6 +1,7 @@
 require("config.utils")
 
 -- PreLazy
+require("config.prelazy.system_setup")
 require("config.prelazy.env")
 require("config.prelazy.options")
 require("config.prelazy.functions")

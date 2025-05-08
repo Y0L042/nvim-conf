@@ -44,21 +44,21 @@ vim.api.nvim_create_user_command("DiagnosticToggle", function()
 	}
 end, { desc = "toggle diagnostic" })
 
-if (is_env_laptop_win) then 
-  ---- Set shell to MSYS2 bash.exe
-  vim.opt.shell = "C:/msys64/usr/bin/bash"
-  vim.opt.shellcmdflag = '-c'
-  vim.opt.shellquote = ''
-  vim.opt.shellxquote = ''
-
-  ---- Ensure shellslash is not set
-  vim.opt.shellslash = false
-
-  ---- Add ripgrep to the PATH
-  vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
-
-  vim.env.PATH = "/ucrt64/bin:" .. vim.env.PATH
-end
+-- if (is_env_laptop_win) then 
+--   ---- Set shell to MSYS2 bash.exe
+--   vim.opt.shell = "C:/msys64/usr/bin/bash.exe"
+--   vim.opt.shellcmdflag = '-c'
+--   vim.opt.shellquote = ''
+--   vim.opt.shellxquote = ''
+--
+--   ---- Ensure shellslash is not set
+--   vim.opt.shellslash = true
+--
+--   ---- Add ripgrep to the PATH
+--   vim.env.PATH = vim.env.PATH .. ';C:\\msys64\\ucrt64\\bin'
+--
+--   vim.env.PATH = "C:\\msys64\\ucrt64\\bin;" .. vim.env.PATH
+-- end
 
 local function clear_shada_files()
     -- Get the shada files' paths
