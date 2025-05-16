@@ -32,6 +32,13 @@ return {
     local api = require 'nvim-tree.api'
 
     require("nvim-tree").setup {
+      filesystem_watchers = {
+          enable = true,
+          debounce_delay = 50,
+      },
+      experimental = {
+          use_libuv_file_watcher = true,
+      },
       filters = {
         dotfiles = false,
         custom = {},
@@ -83,10 +90,10 @@ return {
         end
 
         -- Hook into cursor movement
-        vim.api.nvim_create_autocmd("CursorMoved", {
-          buffer = bufnr,
-          callback = update_statusline,
-        })
+        -- vim.api.nvim_create_autocmd("CursorMoved", {
+        --   buffer = bufnr,
+        --   callback = update_statusline,
+        -- })
       end,
     }
 

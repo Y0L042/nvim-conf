@@ -31,7 +31,7 @@ return {
   {
     'neovim/nvim-lspconfig',
     -- lazy = true,
-   event = "VeryLazy",
+   cmd = {"LspStart", "LspStop", "LspInfo "},
     config = function()
         -- LUA
       require'lspconfig'.lua_ls.setup{}
@@ -76,6 +76,14 @@ return {
     --       gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv 'GDScript_Port' or '6005' }
     --   end
     -- require('lspconfig').gdscript.setup(gdscript_config)
+
+      -- keymap to start/stop LSP on demand
+      vim.keymap.set('n', '<leader>ls', ':LspStart<CR>', {
+        noremap = true, silent = true, desc = "Start LSP"  -- added
+      })
+      vim.keymap.set('n', '<leader>lS', ':LspStop<CR>', {
+        noremap = true, silent = true, desc = "Stop LSP"   -- added
+      })
 
     -- Key mappings for diagnostics
     local diagnostics_enabled = false -- False by default
