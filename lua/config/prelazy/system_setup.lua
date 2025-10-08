@@ -23,7 +23,7 @@
 --   vim.api.nvim_command("belowright split")                 -- horizontal split
 --   vim.api.nvim_command("terminal C:/msys64/msys2_shell.cmd -defterm -here -no-start -ucrt64")
 --   vim.api.nvim_command("file MSYS2_UCRT64")                 -- mark the buffer
---   
+--
 --   -- Enter insert mode in the terminal
 --   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("i", true, false, true), 'n', true)
 -- end
@@ -32,13 +32,13 @@
 -- vim.keymap.set("n", "<Leader>mt", toggle_msys2, { desc = " Toggle MSYS2 UCRT64 Bash" })
 
 -- top of init.lua, not inside any conditional
-vim.opt.hidden      = true
-vim.opt.shell       = "C:/msys64/usr/bin/bash.exe"
-vim.opt.shellcmdflag= "-c"
-vim.opt.shellquote  = ""
-vim.opt.shellxquote = ""
-vim.opt.shellslash  = true
+vim.opt.hidden       = true
+vim.opt.shell        = "C:/msys64/usr/bin/bash.exe"
+vim.opt.shellcmdflag = "-c"
+vim.opt.shellquote   = ""
+vim.opt.shellxquote  = ""
+vim.opt.shellslash   = true
 
 -- These two make :!echo a actually invoke bash -c 'echo a' correctly:
-vim.opt.shellredir  = ">%s 2>&1"
-vim.opt.shellpipe   = "2>&1| tee %s"
+vim.opt.shellredir   = ">%s 2>&1"
+vim.opt.shellpipe    = "2>&1| tee %s"

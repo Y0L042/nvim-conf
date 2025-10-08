@@ -2,9 +2,9 @@ return {
     {
         "rmagatti/auto-session",
         event = "VeryLazy",
-          ---enables autocomplete for opts
-          ---@module "auto-session"
-          ---@type AutoSession.Config
+        ---enables autocomplete for opts
+        ---@module "auto-session"
+        ---@type AutoSession.Config
         config = function()
             require("auto-session").setup {
                 suppressed_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
@@ -18,14 +18,13 @@ return {
 
             }
 
-            vim.keymap.set("n", "<Leader>ls", require("auto-session.session-lens").search_session, {
+            vim.keymap.set("n", "<Leader>ls", "<cmd>SessionSearch<cr>", {
                 noremap = true,
             })
 
-          vim.api.nvim_set_keymap('n', '<F3>', ':SessionSave<CR>', { noremap = true, silent = true })
-          vim.api.nvim_set_keymap('i', '<F3>', '<Esc>:SessionSave<CR>i', { noremap = true, silent = true })
-        vim.o.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+            vim.api.nvim_set_keymap('n', '<F3>', ':SessionSave<CR>', { noremap = true, silent = true })
+            vim.api.nvim_set_keymap('i', '<F3>', '<Esc>:SessionSave<CR>i', { noremap = true, silent = true })
+            vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
         end
     },
 }
-

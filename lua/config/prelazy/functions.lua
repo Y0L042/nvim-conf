@@ -35,16 +35,16 @@ vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = 
 
 
 vim.api.nvim_create_user_command("DiagnosticToggle", function()
-	local config = vim.diagnostic.config
-	local vt = config().virtual_text
-	config {
-		virtual_text = not vt,
-		underline = not vt,
-		signs = not vt,
-	}
+  local config = vim.diagnostic.config
+  local vt = config().virtual_text
+  config {
+    virtual_text = not vt,
+    underline = not vt,
+    signs = not vt,
+  }
 end, { desc = "toggle diagnostic" })
 
--- if (is_env_laptop_win) then 
+-- if (is_env_laptop_win) then
 --   ---- Set shell to MSYS2 bash.exe
 --   vim.opt.shell = "C:/msys64/usr/bin/bash.exe"
 --   vim.opt.shellcmdflag = '-c'
@@ -61,18 +61,18 @@ end, { desc = "toggle diagnostic" })
 -- end
 
 local function clear_shada_files()
-    -- Get the shada files' paths
-    local shada_files = vim.fn.glob(vim.fn.stdpath('data') .. '/*.*', 1, 1)
+  -- Get the shada files' paths
+  local shada_files = vim.fn.glob(vim.fn.stdpath('data') .. '/*.*', 1, 1)
 
-    -- Delete each shada file
-    for _, file in ipairs(shada_files) do
-        vim.fn.delete(file)
-    end
+  -- Delete each shada file
+  for _, file in ipairs(shada_files) do
+    vim.fn.delete(file)
+  end
 
-    -- Reload Neovim
-    vim.cmd('silent! wa')  -- Save all files
-    vim.cmd('silent! qall!')  -- Quit all windows
-    vim.cmd('silent! edit')  -- Reopen the current file
+  -- Reload Neovim
+  vim.cmd('silent! wa')      -- Save all files
+  vim.cmd('silent! qall!')   -- Quit all windows
+  vim.cmd('silent! edit')    -- Reopen the current file
 end
 
 -- Map the function to a command for easy use

@@ -1,6 +1,6 @@
 -- Enable loading of local configuration files (.nvim.lua, .nvimrc, etc.)
-vim.o.exrc = true        -- Enable reading of local config files (like .nvim.lua)
-vim.o.secure = true      -- Ensure safe mode for untrusted configs
+vim.o.exrc = true   -- Enable reading of local config files (like .nvim.lua)
+vim.o.secure = true -- Ensure safe mode for untrusted configs
 
 
 -- disable netrw at the very start of your init.lua FOR NVIM-TREE PLUGIN
@@ -16,17 +16,17 @@ vim.opt.fileencoding = "utf-8"
 vim.opt.compatible = false
 
 -- Use indentation of previous line
-vim.opt.autoindent = true 
+vim.opt.autoindent = true
 
 -- Use intelligent indentation for C
 vim.opt.smartindent = true
 vim.opt.backspace = { 'indent', 'eol', 'start' }
 
 -- Configure tab width and insert spaces instead of tabs
-vim.opt.tabstop = 4       -- Tab width is 4 spaces
-vim.opt.shiftwidth = 4    -- Indent also with 4 spaces
-vim.opt.softtabstop = 4    
-vim.opt.expandtab = true  -- Expand tabs to spaces
+vim.opt.tabstop = 4      -- Tab width is 4 spaces
+vim.opt.shiftwidth = 4   -- Indent also with 4 spaces
+vim.opt.softtabstop = 4
+vim.opt.expandtab = true -- Expand tabs to spaces
 
 -- Wrap lines at 80 chars.
 vim.opt.textwidth = 80
@@ -79,4 +79,4 @@ vim.opt.cursorline = true
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- Set the timeout length for leader key sequences
-vim.opt.timeoutlen = 1500  -- Adjust this value as needed, 1000 ms = 1 second
+vim.opt.timeoutlen = 1500 -- Adjust this value as needed, 1000 ms = 1 second

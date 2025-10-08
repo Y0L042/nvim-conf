@@ -3,6 +3,7 @@ return {
   -- [[ Mason ]]
   {
     "williamboman/mason.nvim",
+    -- lazy = true,
     event = "VeryLazy",
     config = function()
       require("mason").setup {}
@@ -12,12 +13,9 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     event = "VeryLazy",
-    dependencies = {
-      "williamboman/mason.nvim",
-    },
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "clangd" },
+        ensure_installed = { "clangd" },
       })
     end,
   },
@@ -29,23 +27,20 @@ return {
       require('java').setup()
     end
   },
-  -- LSP Configuration using built-in vim.lsp.config (Neovim 0.11+)
+  -- Add nvim-lspconfig
   {
-    "neovim/nvim-lspconfig", -- LSP configuration plugin
-    event = "VeryLazy",
-    dependencies = {
-      "williamboman/mason.nvim",
-      "williamboman/mason-lspconfig.nvim",
-    },
+    'neovim/nvim-lspconfig',
+    -- lazy = true,
+    cmd = { "LspStart", "LspStop", "LspInfo " },
     config = function()
       -- LUA
-      vim.lsp.config('lua_ls', {})
+      require 'lspconfig'.lua_ls.setup {}
 
       -- JAVA
-      -- vim.lsp.config('jdtls', {})
+      -- require('lspconfig').jdtls.setup({})
 
       -- C/CPP
-      vim.lsp.config('clangd', {
+      require 'lspconfig'.clangd.setup {
         cmd = { "clangd", '--background-index', '--clang-tidy' },
         settings = {
           clangd = {
@@ -58,11 +53,11 @@ return {
             fallbackFlags = { "-std=c99" },
           },
         },
-        root_dir = vim.fs.root(0, { 'compile_commands.json', '.git', '.clangd', '.clang-format' }),
-      })
+        root_dir = require('lspconfig').util.root_pattern('compile_commands.json', '.git', '.clangd', '.clang-format'),
+      }
 
       -- MATLAB
-      -- vim.lsp.config('matlab_ls', {
+      -- require("lspconfig").matlab_ls.setup({
       --  single_file_support = true,
       -- settings = {
       -- 	matlab = {
@@ -80,7 +75,7 @@ return {
       --   if vim.fn.has 'win32' == 1 then
       --       gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv 'GDScript_Port' or '6005' }
       --   end
-      -- vim.lsp.config('gdscript', gdscript_config)
+      -- require('lspconfig').gdscript.setup(gdscript_config)
 
       -- keymap to start/stop LSP on demand
       vim.keymap.set('n', '<leader>ls', ':LspStart<CR>', {

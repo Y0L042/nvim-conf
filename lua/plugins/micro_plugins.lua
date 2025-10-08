@@ -1,20 +1,19 @@
 return {
 	{
 		'm4xshen/autoclose.nvim',
-        event = "VeryLazy",
+		event = "VeryLazy",
 		config = function()
 			require("autoclose").setup({
-			   keys = {
-			   },
-			})        
+				keys = {
+				},
+			})
 			--vim.api.nvim_set_keymap('i', '/*', '/*  */<Left><Left><Left>', { noremap = true, silent = true })
-
 		end,
 	},
 
-    {
+	{
 		'tpope/vim-surround',
-        event = "VeryLazy",
+		event = "VeryLazy",
 		config = function()
 			-- Optional: Add any custom configuration for vim-surround here
 		end,
@@ -22,7 +21,7 @@ return {
 
 	{
 		"numToStr/Comment.nvim",
-        event = "VeryLazy",
+		event = "VeryLazy",
 		config = function()
 			require('Comment').setup({
 				opts = {
@@ -33,23 +32,23 @@ return {
 		end,
 	},
 
-	{ 
+	{
 		"folke/flash.nvim"
 	},
 
 	{
-    "lewis6991/gitsigns.nvim",
-    event = "VeryLazy",
-    config = function()
-        require('gitsigns').setup({
-            
-        })
-    end,
+		"lewis6991/gitsigns.nvim",
+		event = "VeryLazy",
+		config = function()
+			require('gitsigns').setup({
+
+			})
+		end,
 	},
 
 	{
-	  "chentoast/marks.nvim",
-	  event = "VeryLazy",
-	  opts = {},
+		"chentoast/marks.nvim",
+		event = "VeryLazy",
+		opts = {},
 	},
 }

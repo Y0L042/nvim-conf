@@ -37,10 +37,10 @@ return {
     config = function()
       -- Enable true colors support
       vim.o.termguicolors = true
-  
+
       -- Set the ayucolor variable to choose the theme variant
-      vim.g.ayucolor = "dark"  -- Options: "light", "mirage", "dark"
-  
+      vim.g.ayucolor = "dark" -- Options: "light", "mirage", "dark"
+
       -- Apply the colorscheme
       vim.cmd('colorscheme ayu')
     end,

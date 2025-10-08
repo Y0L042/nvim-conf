@@ -1,225 +1,272 @@
 return {
-    -- [[ Telescope Configuration ]]
-    {
-      -- Fuzzy Finder (files, lsp, etc)
-      'nvim-telescope/telescope.nvim',
-      event = 'VeryLazy',
-      branch = '0.1.x',
-      dependencies = {
-        'nvim-lua/plenary.nvim',
-        { -- Telescope FZF Native for better sorting
-          'nvim-telescope/telescope-fzf-native.nvim',
-          build = 'make', -- Only run `make` when installing/updating the plugin
-          cond = function()
-            return vim.fn.executable 'make' == 1
-          end,
-        },
-        { 'nvim-telescope/telescope-ui-select.nvim' },
-        { 
-          'nvim-tree/nvim-web-devicons', 
-          enabled = vim.g.have_nerd_font 
-        }, -- Requires a Nerd Font for icons
+  -- [[ Telescope Configuration ]]
+  {
+    -- Fuzzy Finder (files, lsp, etc)
+    'nvim-telescope/telescope.nvim',
+    event = 'VeryLazy',
+    branch = '0.1.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      {                 -- Telescope FZF Native for better sorting
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = 'make', -- Only run `make` when installing/updating the plugin
+        cond = function()
+          return vim.fn.executable 'make' == 1
+        end,
       },
-      config = function()
-        -- Define patterns to ignore (exclude)
-        local ignore_patterns = {
-          "%.exe$", "%.dll$", "%.so$", "%.dylib$",
-          "%.o$", "%.obj$", "%.log$", "%.pdb$",
-          "%.cmake$", "%.sln$", "%.vcxproj$", "%.vcxproj%.user$",
-          "%.git/", "%.svn/", "%.idea/", "%.vscode/",
-          "build/", "bin/", "out/", "dist/",
-          "%.tmp$", "%.bak$", "%.tlog", "%.idb", "%.sarif"
-        }
-
-        -- Define patterns to allow (include)
-        local allow_patterns = {
-          -- Source code files
-          "*.lua", "*.py", "*.js", "*.ts", "*.html", "*.css", "*.scss",
-          "*.cpp", "*.inl", "*.gd", "*.c", "*.h", "*.hpp",
-          "*.java", "*.cs", "*.rb", "*.go", "*.rs", "*.sh",
-          "*.bat", "*.php", "*.dart", "*.swift",
-
-          -- Configuration files
-          "*.json", "*.yaml", "*.yml", "*.toml", "*.ini",
-          "*.cfg", "*.env",
-
-          -- Documentation files
-          "*.md", "*.txt", "*.rst", "*.adoc",
-
-          -- Build files
-          "Makefile", "*.mk", "*.cmake", "*.gradle", "*.pom",
-
-          -- Version control and meta files
-          ".gitignore", "*.gitattributes", "*.gitmodules",
-
-          -- Miscellaneous
-          "*.csv", "*.tsv", "*.xml", "*.sql", "*.log",
-        }
-
-        -- [[ Custom path_display Functions ]]
-        local function normalize_path(path)
-          return path:gsub("\\", "/")
-        end
-
-        local function normalize_cwd()
-          return normalize_path(vim.loop.cwd()) .. "/"
-        end
-
-        local function is_subdirectory(cwd, path)
-          return string.lower(path:sub(1, #cwd)) == string.lower(cwd)
-        end
-
-        local function split_filepath(path)
-          local normalized_path = normalize_path(path)
-          local normalized_cwd = normalize_cwd()
-          local filename = normalized_path:match("[^/]+$")
-
-          if is_subdirectory(normalized_cwd, normalized_path) then
-            local stripped_path = normalized_path:sub(#normalized_cwd + 1, -(#filename + 1))
-            return stripped_path, filename
-          else
-            local stripped_path = normalized_path:sub(1, -(#filename + 1))
-            return stripped_path, filename
-          end
-        end
-
-        local function path_display(_, path)
-          local stripped_path, filename = split_filepath(path)
-          if filename == stripped_path or stripped_path == "" then
-            return filename
-          end
-          return string.format("%s\t | \t%s", filename, stripped_path)
-        end
-
-        -- [[ Configure Telescope ]]
-        local actions = require('telescope.actions')
-        local action_state = require('telescope.actions.state')
-
-        require('telescope').setup {
-          defaults = {
-            prompt_prefix = "🔍 ",
-            selection_caret = "➤ ",
-            path_display = path_display, -- Use the custom path_display function
-            file_ignore_patterns = ignore_patterns, -- Exclude unwanted files/directories
-
-            mappings = {
-              i = {}, -- Insert mode mappings
-              n = {
-                ["<A-v>"] = actions.file_vsplit, -- Open selected file in a vertical split
-              },
-            },
-
-            vimgrep_arguments = {
-              "rg",
-              "--color=never",
-              "--no-heading",
-              "--with-filename",
-              "--line-number",
-              "--column",
-              "--smart-case",
-              "--hidden",
-              "--glob", "!.git/*",
-            },
-            file_sorter = require('telescope.sorters').get_fuzzy_file,   -- FZF sorter
-            generic_sorter = require('telescope.sorters').get_generic_fuzzy_sorter(),
-            file_previewer   = require('telescope.previewers').vim_buffer_cat.new,
-            grep_previewer   = require('telescope.previewers').vim_buffer_vimgrep.new,
-            qflist_previewer = require('telescope.previewers').vim_buffer_qflist.new,
-            -- disable previewer for big dirs
-            previewer = false,
-          },
-          pickers = {
-            find_files = {
-              find_command = { "fd", "--type", "f", "--hidden", "--strip-cwd-prefix" },
-              previewer = false,        -- skip the file preview
-            },
-            live_grep = {
-              previewer = false,        -- skip the file preview
-            },
-          },
-          extensions = {
-            ['ui-select'] = {
-              require('telescope.themes').get_dropdown(),
-            },
-            fzf = {                   -- make sure fzf-native is loaded
-              fuzzy = true,
-              override_generic_sorter = true,
-              override_file_sorter    = true,
-              case_mode = "smart_case",
-            },
-          },
-        }
-
-        -- Enable Telescope extensions if they are installed
-        pcall(require('telescope').load_extension, 'fzf')
-        pcall(require('telescope').load_extension, 'ui-select')
-
-        -- Shortcut to access Telescope's built-in functions
-        local builtin = require 'telescope.builtin'
-
-        -- Keymaps for various Telescope functions
-        vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-        vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-        vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-        vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-        -- vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-        vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-        vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-        vim.keymap.set('n', '<leader><leader>', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-        vim.keymap.set('n', '<leader>sj', builtin.jumplist, { desc = '[S]earch [J]umps' })
-        vim.keymap.set('n', '<leader>s.', builtin.buffers, { desc = '[ ] Find existing buffers' })
-
-        vim.keymap.set('n', '<leader>sD', builtin.lsp_definitions, { desc = '[S]earch LSP [D]efinitions' })
-        vim.keymap.set('n', '<leader>sT', builtin.lsp_type_definitions, { desc = '[S]earch LSP [T]ype definitions' })
-        vim.keymap.set('n', '<leader>sR', builtin.lsp_references, { desc = '[S]earch LSP [R]erferences' })
-        vim.keymap.set('n', '<leader>sI', builtin.lsp_implementations, { desc = '[S]earch LSP [I]mplementations' })
-
-        -- Keymap for searching files with allow-only patterns using `rg --files`
-        vim.keymap.set('n', '<leader>sf', function()
-          local find_command = { "rg", "--files", "--hidden", "--no-ignore" }
-          for _, pattern in ipairs(allow_patterns) do
-            table.insert(find_command, "--glob")
-            table.insert(find_command, pattern)
-          end
-          require('telescope.builtin').find_files {
-            find_command = find_command,
-          }
-        end, { desc = '[S]earch [F]iles (allow-only)' })
-
-        -- Keymap for live grep with allow-only patterns using `rg`
-        vim.keymap.set('n', '<leader>sg', function()
-          local grep_args = { "--hidden", "--no-ignore" }
-          for _, pattern in ipairs(allow_patterns) do
-            table.insert(grep_args, "--glob")
-            table.insert(grep_args, pattern)
-          end
-          require('telescope.builtin').live_grep {
-            additional_args = function()
-              return grep_args
-            end,
-          }
-        end, { desc = '[S]earch by [G]rep (allow-only)' })
-
-        -- Advanced example: Fuzzily search in the current buffer with a dropdown theme
-        vim.keymap.set('n', '<leader>/', function()
-          builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-            -- winblend = 10,
-            previewer = true,
-          })
-        end, { desc = '[/] Fuzzily search in current buffer' })
-
-        -- Search within open files
-        vim.keymap.set('n', '<leader>s/', function()
-          builtin.live_grep {
-            grep_open_files = true,
-            prompt_title = 'Live Grep in Open Files',
-          }
-        end, { desc = '[S]earch [/] in Open Files' })
-
-        -- Shortcut for searching your Neovim configuration files
-        vim.keymap.set('n', '<leader>sn', function()
-          builtin.find_files { cwd = vim.fn.stdpath 'config' }
-        end, { desc = '[S]earch [N]eovim files' })
-      end,
+      { 'nvim-telescope/telescope-ui-select.nvim' },
+      {
+        'nvim-tree/nvim-web-devicons',
+        enabled = vim.g.have_nerd_font
+      }, -- Requires a Nerd Font for icons
     },
+    config = function()
+      -- Define patterns to ignore (exclude)
+      local ignore_patterns = {
+        "%.exe$", "%.dll$", "%.so$", "%.dylib$",
+        "%.o$", "%.obj$", "%.log$", "%.pdb$",
+        "%.cmake$", "%.sln$", "%.vcxproj$", "%.vcxproj%.user$",
+        "%.git/", "%.svn/", "%.idea/", "%.vscode/",
+        "build/", "bin/", "out/", "dist/",
+        "%.tmp$", "%.bak$", "%.tlog", "%.idb", "%.sarif"
+      }
+
+      -- Define patterns to allow (include)
+      local allow_patterns = {
+        -- Source code files
+        "*.lua", "*.py", "*.js", "*.ts", "*.html", "*.css", "*.scss",
+        "*.cpp", "*.inl", "*.gd", "*.c", "*.h", "*.hpp",
+        "*.java", "*.cs", "*.rb", "*.go", "*.rs", "*.sh",
+        "*.bat", "*.php", "*.dart", "*.swift",
+
+        -- Configuration files
+        "*.json", "*.yaml", "*.yml", "*.toml", "*.ini",
+        "*.cfg", "*.env",
+
+        -- Documentation files
+        "*.md", "*.txt", "*.rst", "*.adoc",
+
+        -- Build files
+        "Makefile", "*.mk", "*.cmake", "*.gradle", "*.pom",
+
+        -- Version control and meta files
+        ".gitignore", "*.gitattributes", "*.gitmodules",
+
+        -- Miscellaneous
+        "*.csv", "*.tsv", "*.xml", "*.sql", "*.log",
+      }
+
+      -- [[ Custom path_display Functions ]]
+      local function normalize_path(path)
+        return path:gsub("\\", "/")
+      end
+
+      local function normalize_cwd()
+        return normalize_path(vim.loop.cwd()) .. "/"
+      end
+
+      local function is_subdirectory(cwd, path)
+        return string.lower(path:sub(1, #cwd)) == string.lower(cwd)
+      end
+
+      local function split_filepath(path)
+        local normalized_path = normalize_path(path)
+        local normalized_cwd = normalize_cwd()
+
+        -- Extract filename more robustly
+        local filename = normalized_path:match("([^/]+)$")
+        if not filename or filename == "" then
+          filename = normalized_path
+        end
+
+        local dir_path = ""
+        if is_subdirectory(normalized_cwd, normalized_path) then
+          -- Remove the cwd and the filename to get the relative directory path
+          local relative_path = normalized_path:sub(#normalized_cwd + 1)
+          dir_path = relative_path:sub(1, -(#filename + 2)) -- -2 to account for the trailing slash
+        else
+          -- For absolute paths outside cwd, get the directory part
+          local last_slash = normalized_path:find("/[^/]*$")
+          if last_slash then
+            dir_path = normalized_path:sub(1, last_slash - 1)
+          end
+        end
+
+        return dir_path, filename
+      end
+
+      local function path_display(_, path)
+        -- Always normalize the path first
+        local normalized_path = normalize_path(path)
+
+        -- Extract filename - try multiple methods to ensure we get it
+        local filename = normalized_path:match("([^/]+)$")
+        if not filename or filename == "" then
+          filename = normalized_path:match("([^\\]+)$") -- Try backslash
+          if not filename or filename == "" then
+            filename = path                             -- Fallback to original path
+          end
+        end
+
+        -- Get the directory part
+        local dir_path = ""
+        local last_slash = normalized_path:find("/[^/]*$")
+        if last_slash and last_slash > 1 then
+          dir_path = normalized_path:sub(1, last_slash - 1)
+
+          -- Make it relative to cwd if possible
+          local normalized_cwd = normalize_cwd()
+          if is_subdirectory(normalized_cwd, dir_path .. "/") then
+            dir_path = dir_path:sub(#normalized_cwd)
+            if dir_path == "" then
+              dir_path = "."
+            end
+          end
+        else
+          dir_path = "."
+        end
+
+        local path_width = 40
+
+        -- Ensure we always have a filename (not the full path)
+        if #filename > path_width then
+          filename = "..." .. filename:sub(-(path_width - 3))
+        end
+
+        -- Create aligned columns with consistent spacing
+        local padded_filename = filename .. string.rep(" ", math.max(0, path_width - #filename))
+        return string.format("%s │ %s", padded_filename, dir_path)
+      end
+
+      -- [[ Configure Telescope ]]
+      local actions = require('telescope.actions')
+      local action_state = require('telescope.actions.state')
+
+      require('telescope').setup {
+        defaults = {
+          prompt_prefix        = "🔍 ",
+          selection_caret      = "➤ ",
+          path_display         = path_display,    -- Use the custom path_display function
+          file_ignore_patterns = ignore_patterns, -- Exclude unwanted files/directories
+
+          mappings             = {
+            i = {},                            -- Insert mode mappings
+            n = {
+              ["<A-v>"] = actions.file_vsplit, -- Open selected file in a vertical split
+            },
+          },
+
+          vimgrep_arguments    = {
+            "rg",
+            "--color=never",
+            "--no-heading",
+            "--with-filename",
+            "--line-number",
+            "--column",
+            "--smart-case",
+            "--hidden",
+            "--glob", "!.git/*",
+          },
+          file_sorter          = require('telescope.sorters').get_fuzzy_file, -- FZF sorter
+          generic_sorter       = require('telescope.sorters').get_generic_fuzzy_sorter(),
+          file_previewer       = require('telescope.previewers').vim_buffer_cat.new,
+          grep_previewer       = require('telescope.previewers').vim_buffer_vimgrep.new,
+          qflist_previewer     = require('telescope.previewers').vim_buffer_qflist.new,
+          -- disable previewer for big dirs
+          previewer            = false,
+        },
+        pickers = {
+          find_files = {
+            find_command = { "fd", "--type", "f", "--hidden", "--strip-cwd-prefix" },
+            previewer = false, -- skip the file preview
+          },
+          live_grep = {
+            previewer = false, -- skip the file preview
+          },
+        },
+        extensions = {
+          ['ui-select'] = {
+            require('telescope.themes').get_dropdown(),
+          },
+          fzf = { -- make sure fzf-native is loaded
+            fuzzy                   = true,
+            override_generic_sorter = true,
+            override_file_sorter    = true,
+            case_mode               = "smart_case",
+          },
+        },
+      }
+
+      -- Enable Telescope extensions if they are installed
+      pcall(require('telescope').load_extension, 'fzf')
+      pcall(require('telescope').load_extension, 'ui-select')
+
+      -- Shortcut to access Telescope's built-in functions
+      local builtin = require 'telescope.builtin'
+
+      -- Keymaps for various Telescope functions
+      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
+      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
+      -- vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader><leader>', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>sj', builtin.jumplist, { desc = '[S]earch [J]umps' })
+      vim.keymap.set('n', '<leader>s.', builtin.buffers, { desc = '[ ] Find existing buffers' })
+
+      vim.keymap.set('n', '<leader>sD', builtin.lsp_definitions, { desc = '[S]earch LSP [D]efinitions' })
+      vim.keymap.set('n', '<leader>sT', builtin.lsp_type_definitions, { desc = '[S]earch LSP [T]ype definitions' })
+      vim.keymap.set('n', '<leader>sR', builtin.lsp_references, { desc = '[S]earch LSP [R]erferences' })
+      vim.keymap.set('n', '<leader>sI', builtin.lsp_implementations, { desc = '[S]earch LSP [I]mplementations' })
+
+      -- Keymap for searching files with allow-only patterns using `rg --files`
+      vim.keymap.set('n', '<leader>sf', function()
+        local find_command = { "rg", "--files", "--hidden", "--no-ignore" }
+        for _, pattern in ipairs(allow_patterns) do
+          table.insert(find_command, "--glob")
+          table.insert(find_command, pattern)
+        end
+        require('telescope.builtin').find_files {
+          find_command = find_command,
+        }
+      end, { desc = '[S]earch [F]iles (allow-only)' })
+
+      -- Keymap for live grep with allow-only patterns using `rg`
+      vim.keymap.set('n', '<leader>sg', function()
+        local grep_args = { "--hidden", "--no-ignore" }
+        for _, pattern in ipairs(allow_patterns) do
+          table.insert(grep_args, "--glob")
+          table.insert(grep_args, pattern)
+        end
+        require('telescope.builtin').live_grep {
+          additional_args = function()
+            return grep_args
+          end,
+        }
+      end, { desc = '[S]earch by [G]rep (allow-only)' })
+
+      -- Advanced example: Fuzzily search in the current buffer with a dropdown theme
+      vim.keymap.set('n', '<leader>/', function()
+        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          -- winblend = 10,
+          previewer = true,
+        })
+      end, { desc = '[/] Fuzzily search in current buffer' })
+
+      -- Search within open files
+      vim.keymap.set('n', '<leader>s/', function()
+        builtin.live_grep {
+          grep_open_files = true,
+          prompt_title = 'Live Grep in Open Files',
+        }
+      end, { desc = '[S]earch [/] in Open Files' })
+
+      -- Shortcut for searching your Neovim configuration files
+      vim.keymap.set('n', '<leader>sn', function()
+        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+      end, { desc = '[S]earch [N]eovim files' })
+    end,
+  },
 }
