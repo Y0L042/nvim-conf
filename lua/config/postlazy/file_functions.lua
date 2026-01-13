@@ -62,9 +62,22 @@ vim.api.nvim_create_autocmd("FileType", {
             local current_ext = vim.fn.expand('%:e')
             local target_files = {}
 
-            -- Save the current position in a global table
+            -- Save the current position in a global table with LRU cleanup
+            local MAX_FILE_POSITIONS = 50
             local file_pos = vim.g.file_positions or {}
             file_pos[filepath] = { line = vim.fn.line('.'), col = vim.fn.col('.') }
+
+            -- Implement simple LRU: remove oldest entry if table exceeds max size
+            if vim.tbl_count(file_pos) > MAX_FILE_POSITIONS then
+                -- Remove the first entry (simple FIFO approximation of LRU)
+                local oldest_key = next(file_pos)
+                if oldest_key then
+                    file_pos[oldest_key] = nil
+                end
+                -- Hint GC after cleanup to reclaim memory immediately
+                collectgarbage("step", 100)
+            end
+
             vim.g.file_positions = file_pos
 
             if vim.tbl_contains(header_extensions, '.' .. current_ext) then

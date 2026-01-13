@@ -38,6 +38,8 @@ return {
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
       -- LUA
       vim.lsp.config('lua_ls', {})
 
@@ -46,7 +48,13 @@ return {
 
       -- C/CPP
       vim.lsp.config('clangd', {
-        cmd = { "clangd", '--background-index', '--clang-tidy' },
+        cmd = {
+          "clangd",
+          '--background-index=false', -- Disable background indexing to save memory
+          '--clang-tidy=false',       -- Disable clang-tidy to reduce memory usage
+          '--limit-results=50',       -- Limit completion results
+          '--header-insertion=never', -- Prevent header insertion memory overhead
+        },
         settings = {
           clangd = {
             InlayHints = {

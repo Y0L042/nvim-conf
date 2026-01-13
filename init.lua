@@ -15,3 +15,6 @@ require("config.postlazy.options")
 require("config.postlazy.functions")
 require("config.postlazy.file_functions")
 require("config.postlazy.keymaps")
+require("config.postlazy.lsp_log_config")   -- LSP log management
+require("config.postlazy.cache_management") -- Cache/shada management
+require("config.postlazy.debug_memory")     -- Memory debugging tools

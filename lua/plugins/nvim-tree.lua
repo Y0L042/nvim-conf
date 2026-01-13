@@ -19,7 +19,7 @@ return {
           return name
         end
         local ext_index = name:find("%.[^%.]*$") or #name + 1
-        local prefix = name:sub(1, math.floor(max_len / 2) - 3)          -- Beginning part
+        local prefix = name:sub(1, math.floor(max_len / 2) - 3)            -- Beginning part
         local suffix = name:sub(ext_index - (math.floor(max_len / 2) - 3)) -- End part + extension
         return prefix .. "..." .. suffix
       end
@@ -34,14 +34,31 @@ return {
       require("nvim-tree").setup {
         filesystem_watchers = {
           enable = true,
-          debounce_delay = 50,
+          debounce_delay = 500, -- Increased from 50ms to reduce CPU/memory load
         },
-        experimental = {
-          use_libuv_file_watcher = true,
-        },
+        -- Commented out experimental file watcher to prevent memory leaks
+        -- experimental = {
+        --   use_libuv_file_watcher = true,
+        -- },
         filters = {
           dotfiles = false,
-          custom = {},
+          custom = {
+            "^.git$",
+            "^node_modules$",
+            "^build$",
+            "^out$",
+            "^bin$",
+            "^target$",
+            "^dist$",
+            "\\.o$",
+            "\\.obj$",
+            "\\.exe$",
+            "\\.dll$",
+            "\\.so$",
+            "\\.dylib$",
+            "\\.cache$",
+            "\\.tmp$",
+          },
         },
         git = {
           enable = true,
@@ -99,7 +116,11 @@ return {
 
       vim.api.nvim_set_keymap("n", "<A-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
 
+      -- Use augroup to prevent duplicate autocmds on config reload
+      vim.api.nvim_create_augroup('NvimTreeCustom', { clear = true })
+
       vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+        group = 'NvimTreeCustom',
         pattern = 'NvimTree*',
         callback = function()
           local api = require('nvim-tree.api')
@@ -111,15 +132,15 @@ return {
         end,
       })
 
-
       vim.api.nvim_create_autocmd("SessionLoadPost", {
+        group = 'NvimTreeCustom',
         callback = function()
-          vim.defer_fn(function()                             -- Defer to allow nvim-tree to initialize properly
+          vim.defer_fn(function()                               -- Defer to allow nvim-tree to initialize properly
             local first_buf = vim.fn.bufname(vim.fn.bufnr("%")) -- Get the name of the current (first) buffer
-            if first_buf ~= "" then                           -- If there is a file open
-              vim.cmd("NvimTreeFindFile")                     -- Run NvimTreeFindFile to highlight the file in nvim-tree
+            if first_buf ~= "" then                             -- If there is a file open
+              vim.cmd("NvimTreeFindFile")                       -- Run NvimTreeFindFile to highlight the file in nvim-tree
             end
-          end, 500)                                           -- Adjust delay if necessary
+          end, 500)                                             -- Adjust delay if necessary
         end,
       })
     end,

@@ -149,6 +149,12 @@ return {
           path_display         = path_display,    -- Use the custom path_display function
           file_ignore_patterns = ignore_patterns, -- Exclude unwanted files/directories
 
+          -- Limit picker results to prevent memory bloat
+          cache_picker = {
+            num_pickers = 5,      -- Only cache 5 most recent pickers
+            limit_entries = 100,  -- Max 100 entries per cached picker
+          },
+
           mappings             = {
             i = {},                            -- Insert mode mappings
             n = {
@@ -165,7 +171,22 @@ return {
             "--column",
             "--smart-case",
             "--hidden",
+            -- Exclude version control and common non-source directories
             "--glob", "!.git/*",
+            -- SAFETY: Exclude system directories to prevent memory issues when searching /
+            -- (searching /proc on Linux or C:\Windows on Windows can cause pathological behavior)
+            "--glob", "!/proc/*",
+            "--glob", "!/sys/*",
+            "--glob", "!/dev/*",
+            "--glob", "!/run/*",
+            "--glob", "!/tmp/*",
+            "--glob", "!/var/*",
+            -- Windows system directories
+            "--glob", "!/Windows/*",
+            "--glob", "!/Program Files/*",
+            "--glob", "!/Program Files (x86)/*",
+            "--glob", "!*/ProgramData/*",
+            "--glob", "!*/AppData/*",
           },
           file_sorter          = require('telescope.sorters').get_fuzzy_file, -- FZF sorter
           generic_sorter       = require('telescope.sorters').get_generic_fuzzy_sorter(),
@@ -218,7 +239,17 @@ return {
 
       vim.keymap.set('n', '<leader>sD', builtin.lsp_definitions, { desc = '[S]earch LSP [D]efinitions' })
       vim.keymap.set('n', '<leader>sT', builtin.lsp_type_definitions, { desc = '[S]earch LSP [T]ype definitions' })
-      vim.keymap.set('n', '<leader>sR', builtin.lsp_references, { desc = '[S]earch LSP [R]erferences' })
+
+      -- LSP references with memory-conscious settings to prevent buffer explosion
+      vim.keymap.set('n', '<leader>sR', function()
+        builtin.lsp_references({
+          show_line = false,          -- Don't load full buffer content for each match
+          include_declaration = false, -- Exclude declaration to reduce results
+          fname_width = 50,           -- Limit filename display width
+          trim_text = true,           -- Trim long lines instead of loading full content
+        })
+      end, { desc = '[S]earch LSP [R]eferences' })
+
       vim.keymap.set('n', '<leader>sI', builtin.lsp_implementations, { desc = '[S]earch LSP [I]mplementations' })
 
       -- Keymap for searching files with allow-only patterns using `rg --files`
@@ -234,13 +265,19 @@ return {
       end, { desc = '[S]earch [F]iles (allow-only)' })
 
       -- Keymap for live grep with allow-only patterns using `rg`
+      -- SAFETY: Includes safeguards against searching root directory (/) which can cause memory issues
       vim.keymap.set('n', '<leader>sg', function()
         local grep_args = { "--hidden", "--no-ignore" }
         for _, pattern in ipairs(allow_patterns) do
           table.insert(grep_args, "--glob")
           table.insert(grep_args, pattern)
         end
+
+        -- Get current working directory as default search root
+        local cwd = vim.loop.cwd()
+
         require('telescope.builtin').live_grep {
+          cwd = cwd,  -- Explicitly set search root to current working directory
           additional_args = function()
             return grep_args
           end,
@@ -255,13 +292,16 @@ return {
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
 
-      -- Search within open files
-      vim.keymap.set('n', '<leader>s/', function()
-        builtin.live_grep {
-          grep_open_files = true,
-          prompt_title = 'Live Grep in Open Files',
-        }
-      end, { desc = '[S]earch [/] in Open Files' })
+      -- Search within open files - DISABLED to prevent memory bloat
+      -- This feature loads ALL open buffers into memory which can cause 8GB+ RAM spikes
+      -- Uncomment if needed, but use with caution:
+      -- vim.keymap.set('n', '<leader>s/', function()
+      --   builtin.live_grep {
+      --     cwd = vim.loop.cwd(),
+      --     grep_open_files = true,
+      --     prompt_title = 'Live Grep in Open Files',
+      --   }
+      -- end, { desc = '[S]earch [/] in Open Files' })
 
       -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()

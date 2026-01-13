@@ -82,37 +82,8 @@ return {
                     print("Focus enabled globally")
                 end
 
-                -- Reapply the Focus setup to update the configuration
-                require("focus").setup({
-                    enable = focus_enabled,
-                    commands = true,
-                    autoresize = {
-                        enable = true,
-                        width = 0,
-                        height = 0,
-                        minwidth = 0,
-                        minheight = 0,
-                        height_quickfix = 10,
-                    },
-                    split = {
-                        bufnew = false,
-                        tmux = false,
-                    },
-                    ui = {
-                        number = false,
-                        relativenumber = false,
-                        hybridnumber = false,
-                        absolutenumber_unfocussed = false,
-                        cursorline = true,
-                        cursorcolumn = false,
-                        colorcolumn = {
-                            enable = false,
-                            list = '+1',
-                        },
-                        signcolumn = true,
-                        winhighlight = false,
-                    }
-                })
+                -- Note: Not calling setup() again to avoid potential autocmd accumulation
+                -- The plugin should respect vim.g.focus_disable without reconfiguration
             end)
         end
     },

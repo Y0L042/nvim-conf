@@ -33,3 +33,5 @@ vim.opt.splitbelow = true
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
+
+vim.cmd('packadd cfilter')

@@ -5,15 +5,15 @@ return {
     event = "VeryLazy",
     run = ':TSUpdate',
     config = function()
-      require'nvim-treesitter.configs'.setup {
+      require 'nvim-treesitter.configs'.setup {
         -- Ensure these parsers are installed
-        ensure_installed = { "c", "cpp" },
+        ensure_installed = { "c", "cpp", "lua" },
 
         -- Install parsers synchronously (only applied to `ensure_installed`)
         sync_install = false,
 
-        -- Automatically install missing parsers when entering buffer
-        auto_install = true,
+        -- Disabled auto_install to prevent unexpected parser downloads and memory issues
+        auto_install = false,
 
         highlight = {
           -- `false` will disable the whole extension
@@ -26,104 +26,103 @@ return {
           additional_vim_regex_highlighting = false,
         },
       }
-
     end,
   },
   {
     'nvim-treesitter/nvim-treesitter-textobjects',
     event = "VeryLazy",
     config = function()
-        require'nvim-treesitter.configs'.setup {
-          textobjects = {
-            move = {
-              enable = true,
-              set_jumps = true,  -- Record jumps for easier navigation
+      require 'nvim-treesitter.configs'.setup {
+        textobjects = {
+          move = {
+            enable = true,
+            set_jumps = true,   -- Record jumps for easier navigation
 
-              goto_next_start = {
-                ["]f"] = "@function.outer",  -- Added: jump to the start of the next function
-              },
-              goto_previous_start = {
-                ["[f"] = "@function.outer",  -- Added: jump to the start of the previous function
-              },
-
-              goto_next_start = {
-                ["]c"] = "@class.outer",  -- Added: jump to the start of the next class
-              },
-              goto_previous_start = {
-                ["[c"] = "@class.outer",  -- Added: jump to the start of the previous class
-              },
+            goto_next_start = {
+              ["]f"] = "@function.outer",   -- Added: jump to the start of the next function
             },
-            select = {
-              enable = true,
+            goto_previous_start = {
+              ["[f"] = "@function.outer",   -- Added: jump to the start of the previous function
+            },
 
-              -- Automatically jump forward to textobj, similar to targets.vim
-              lookahead = true,
-
-              keymaps = {
-                -- You can use the capture groups defined in textobjects.scm
-                ["af"] = "@function.outer",
-                ["if"] = "@function.inner",
-                ["ac"] = "@class.outer",
-                -- You can optionally set descriptions to the mappings (used in the desc parameter of
-                -- nvim_buf_set_keymap) which plugins like which-key display
-                ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-                -- You can also use captures from other query groups like `locals.scm`
-                ["as"] = { query = "@local.scope", query_group = "locals", desc = "Select language scope" },
-              },
-              -- You can choose the select mode (default is charwise 'v')
-              --
-              -- Can also be a function which gets passed a table with the keys
-              -- * query_string: eg '@function.inner'
-              -- * method: eg 'v' or 'o'
-              -- and should return the mode ('v', 'V', or '<c-v>') or a table
-              -- mapping query_strings to modes.
-              selection_modes = {
-                ['@parameter.outer'] = 'v', -- charwise
-                ['@function.outer'] = 'V', -- linewise
-                ['@class.outer'] = '<c-v>', -- blockwise
-              },
-              -- If you set this to `true` (default is `false`) then any textobject is
-              -- extended to include preceding or succeeding whitespace. Succeeding
-              -- whitespace has priority in order to act similarly to eg the built-in
-              -- `ap`.
-              --
-              -- Can also be a function which gets passed a table with the keys
-              -- * query_string: eg '@function.inner'
-              -- * selection_mode: eg 'v'
-              -- and should return true or false
-              include_surrounding_whitespace = true,
+            goto_next_start = {
+              ["]c"] = "@class.outer",   -- Added: jump to the start of the next class
+            },
+            goto_previous_start = {
+              ["[c"] = "@class.outer",   -- Added: jump to the start of the previous class
             },
           },
-        }
-        -- Override the default behavior of "]f" by explicitly mapping it
-        vim.api.nvim_set_keymap(
-          'n',                   -- mode: normal mode
-          ']f',                  -- key combination to override
-          "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_next_start('@function.outer')<CR>", -- call Treesitter function for next function
-          { noremap = true, silent = true }  -- Options: no recursive mapping and silent execution
-        )
+          select = {
+            enable = true,
 
-        vim.api.nvim_set_keymap(
-          'n',                   -- mode: normal mode
-          '[f',                  -- key combination to override
-          "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_previous_start('@function.outer')<CR>", -- call Treesitter function for previous function
-          { noremap = true, silent = true }  -- Options: no recursive mapping and silent execution
-        )
+            -- Automatically jump forward to textobj, similar to targets.vim
+            lookahead = true,
 
-        -- Override the default behavior of "]f" by explicitly mapping it
-        vim.api.nvim_set_keymap(
-          'n',                   -- mode: normal mode
-          ']c',                  -- key combination to override
-          "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_next_start('@class.outer')<CR>", -- call Treesitter function for next function
-          { noremap = true, silent = false }  -- Options: no recursive mapping and silent execution
-        )
+            keymaps = {
+              -- You can use the capture groups defined in textobjects.scm
+              ["af"] = "@function.outer",
+              ["if"] = "@function.inner",
+              ["ac"] = "@class.outer",
+              -- You can optionally set descriptions to the mappings (used in the desc parameter of
+              -- nvim_buf_set_keymap) which plugins like which-key display
+              ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+              -- You can also use captures from other query groups like `locals.scm`
+              ["as"] = { query = "@local.scope", query_group = "locals", desc = "Select language scope" },
+            },
+            -- You can choose the select mode (default is charwise 'v')
+            --
+            -- Can also be a function which gets passed a table with the keys
+            -- * query_string: eg '@function.inner'
+            -- * method: eg 'v' or 'o'
+            -- and should return the mode ('v', 'V', or '<c-v>') or a table
+            -- mapping query_strings to modes.
+            selection_modes = {
+              ['@parameter.outer'] = 'v',   -- charwise
+              ['@function.outer'] = 'V',    -- linewise
+              ['@class.outer'] = '<c-v>',   -- blockwise
+            },
+            -- If you set this to `true` (default is `false`) then any textobject is
+            -- extended to include preceding or succeeding whitespace. Succeeding
+            -- whitespace has priority in order to act similarly to eg the built-in
+            -- `ap`.
+            --
+            -- Can also be a function which gets passed a table with the keys
+            -- * query_string: eg '@function.inner'
+            -- * selection_mode: eg 'v'
+            -- and should return true or false
+            include_surrounding_whitespace = true,
+          },
+        },
+      }
+      -- Override the default behavior of "]f" by explicitly mapping it
+      vim.api.nvim_set_keymap(
+        'n',                                                                                           -- mode: normal mode
+        ']f',                                                                                          -- key combination to override
+        "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_next_start('@function.outer')<CR>",   -- call Treesitter function for next function
+        { noremap = true, silent = true }                                                              -- Options: no recursive mapping and silent execution
+      )
 
-        vim.api.nvim_set_keymap(
-          'n',                   -- mode: normal mode
-          '[c',                  -- key combination to override
-          "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_previous_start('@class.outer')<CR>", -- call Treesitter function for previous function
-          { noremap = true, silent = false }  -- Options: no recursive mapping and silent execution
-        )
+      vim.api.nvim_set_keymap(
+        'n',                                                                                               -- mode: normal mode
+        '[f',                                                                                              -- key combination to override
+        "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_previous_start('@function.outer')<CR>",   -- call Treesitter function for previous function
+        { noremap = true, silent = true }                                                                  -- Options: no recursive mapping and silent execution
+      )
+
+      -- Override the default behavior of "]f" by explicitly mapping it
+      vim.api.nvim_set_keymap(
+        'n',                                                                                        -- mode: normal mode
+        ']c',                                                                                       -- key combination to override
+        "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_next_start('@class.outer')<CR>",   -- call Treesitter function for next function
+        { noremap = true, silent = false }                                                          -- Options: no recursive mapping and silent execution
+      )
+
+      vim.api.nvim_set_keymap(
+        'n',                                                                                            -- mode: normal mode
+        '[c',                                                                                           -- key combination to override
+        "<cmd>lua require'nvim-treesitter.textobjects.move'.goto_previous_start('@class.outer')<CR>",   -- call Treesitter function for previous function
+        { noremap = true, silent = false }                                                              -- Options: no recursive mapping and silent execution
+      )
     end
   }
 }

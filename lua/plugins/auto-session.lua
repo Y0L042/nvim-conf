@@ -24,7 +24,8 @@ return {
 
             vim.api.nvim_set_keymap('n', '<F3>', ':SessionSave<CR>', { noremap = true, silent = true })
             vim.api.nvim_set_keymap('i', '<F3>', '<Esc>:SessionSave<CR>i', { noremap = true, silent = true })
-            vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+            -- Removed 'terminal' and 'localoptions' to reduce session memory footprint
+            vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos"
         end
     },
 }

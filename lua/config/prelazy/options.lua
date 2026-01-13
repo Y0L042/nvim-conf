@@ -28,6 +28,10 @@ vim.opt.shiftwidth = 4   -- Indent also with 4 spaces
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true -- Expand tabs to spaces
 
+-- Force consistent tab behavior - do not copy indentation from existing files
+vim.opt.copyindent = false   -- Do not copy the structure of existing indents
+vim.opt.preserveindent = false -- Do not preserve existing indentation structure
+
 -- Wrap lines at 80 chars.
 vim.opt.textwidth = 80
 vim.opt.colorcolumn = "81"
