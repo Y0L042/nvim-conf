@@ -28,16 +28,37 @@ return {
         "%.cmake$", "%.sln$", "%.vcxproj$", "%.vcxproj%.user$",
         "%.git/", "%.svn/", "%.idea/", "%.vscode/",
         "build/", "bin/", "out/", "dist/",
-        "%.tmp$", "%.bak$", "%.tlog", "%.idb", "%.sarif"
+        "%.tmp$", "%.bak$", "%.tlog", "%.idb", "%.sarif",
+        "%.claude/",
       }
+
+      -- Glob exclusions passed directly to rg (applied before Telescope filtering)
+      local rg_exclude_globs = {
+        "!.claude/*",
+        "!*/.claude/*",
+        "!build/**",
+        "!bin/**",
+        "!out/**",
+        "!dist/**",
+        "!.git/**",
+      }
+
+      -- Merge project-specific ignore patterns from vim.g.project_ignore_patterns
+      -- Set this in your project's .nvim.lua, e.g.:
+      --   vim.g.project_ignore_patterns = { "vendor/", "third_party/" }
+      local project_ignores = vim.g.project_ignore_patterns or {}
+      for _, pat in ipairs(project_ignores) do
+        table.insert(ignore_patterns, pat)
+      end
 
       -- Define patterns to allow (include)
       local allow_patterns = {
         -- Source code files
         "*.lua", "*.py", "*.js", "*.ts", "*.html", "*.css", "*.scss",
-        "*.cpp", "*.inl", "*.gd", "*.c", "*.h", "*.hpp",
+        "*.cpp", "*.inl", "*.gd", "*.c", "*.h", "*.hpp", "*.inc",
         "*.java", "*.cs", "*.rb", "*.go", "*.rs", "*.sh",
         "*.bat", "*.php", "*.dart", "*.swift",
+        "*.das", "*.das_module", "*.das_project", "*.das_package",
 
         -- Configuration files
         "*.json", "*.yaml", "*.yml", "*.toml", "*.ini",
@@ -61,81 +82,29 @@ return {
         return path:gsub("\\", "/")
       end
 
-      local function normalize_cwd()
-        return normalize_path(vim.loop.cwd()) .. "/"
-      end
-
-      local function is_subdirectory(cwd, path)
-        return string.lower(path:sub(1, #cwd)) == string.lower(cwd)
-      end
-
-      local function split_filepath(path)
-        local normalized_path = normalize_path(path)
-        local normalized_cwd = normalize_cwd()
-
-        -- Extract filename more robustly
-        local filename = normalized_path:match("([^/]+)$")
-        if not filename or filename == "" then
-          filename = normalized_path
-        end
-
-        local dir_path = ""
-        if is_subdirectory(normalized_cwd, normalized_path) then
-          -- Remove the cwd and the filename to get the relative directory path
-          local relative_path = normalized_path:sub(#normalized_cwd + 1)
-          dir_path = relative_path:sub(1, -(#filename + 2)) -- -2 to account for the trailing slash
-        else
-          -- For absolute paths outside cwd, get the directory part
-          local last_slash = normalized_path:find("/[^/]*$")
-          if last_slash then
-            dir_path = normalized_path:sub(1, last_slash - 1)
-          end
-        end
-
-        return dir_path, filename
-      end
-
+      -- Filename-first display: "name.ext               │ relative/dir"
+      -- Uses fnamemodify so it handles both relative and absolute paths robustly on
+      -- Windows; deep directories are shortened to their last 3 components.
+      local path_width = 40
       local function path_display(_, path)
-        -- Always normalize the path first
-        local normalized_path = normalize_path(path)
+        local filename = vim.fn.fnamemodify(path, ":t")
+        local parent   = normalize_path(vim.fn.fnamemodify(path, ":~:.:h"))
 
-        -- Extract filename - try multiple methods to ensure we get it
-        local filename = normalized_path:match("([^/]+)$")
-        if not filename or filename == "" then
-          filename = normalized_path:match("([^\\]+)$") -- Try backslash
-          if not filename or filename == "" then
-            filename = path                             -- Fallback to original path
-          end
-        end
-
-        -- Get the directory part
-        local dir_path = ""
-        local last_slash = normalized_path:find("/[^/]*$")
-        if last_slash and last_slash > 1 then
-          dir_path = normalized_path:sub(1, last_slash - 1)
-
-          -- Make it relative to cwd if possible
-          local normalized_cwd = normalize_cwd()
-          if is_subdirectory(normalized_cwd, dir_path .. "/") then
-            dir_path = dir_path:sub(#normalized_cwd)
-            if dir_path == "" then
-              dir_path = "."
-            end
-          end
+        if parent == "" or parent == "." then
+          parent = "."
         else
-          dir_path = "."
+          local parts = vim.split(parent, "/", { plain = true })
+          if #parts > 3 then
+            parent = "…/" .. table.concat(parts, "/", #parts - 2)
+          end
         end
 
-        local path_width = 40
-
-        -- Ensure we always have a filename (not the full path)
         if #filename > path_width then
           filename = "..." .. filename:sub(-(path_width - 3))
         end
 
-        -- Create aligned columns with consistent spacing
         local padded_filename = filename .. string.rep(" ", math.max(0, path_width - #filename))
-        return string.format("%s │ %s", padded_filename, dir_path)
+        return string.format("%s │ %s", padded_filename, parent)
       end
 
       -- [[ Configure Telescope ]]
@@ -173,6 +142,7 @@ return {
             "--hidden",
             -- Exclude version control and common non-source directories
             "--glob", "!.git/*",
+            "--glob", "!*/.claude/*",
             -- SAFETY: Exclude system directories to prevent memory issues when searching /
             -- (searching /proc on Linux or C:\Windows on Windows can cause pathological behavior)
             "--glob", "!/proc/*",
@@ -222,6 +192,34 @@ return {
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
 
+      -- Sorter that scores the query against the FILENAME only, so verbatim
+      -- filename matches outrank deep-directory matches. If the query contains a
+      -- path separator (/ or \), it scores against the full relative path instead,
+      -- letting you narrow by directory when you want to.
+      local function filename_first_sorter()
+        local ok, fzf_ext = pcall(function()
+          return require('telescope').extensions.fzf
+        end)
+        if not ok or not fzf_ext or not fzf_ext.native_fzf_sorter then
+          -- Fallback: plain fuzzy file sorter (fzf-native not available)
+          return require('telescope.sorters').get_fuzzy_file()
+        end
+
+        local sorter = fzf_ext.native_fzf_sorter({
+          fuzzy = true,
+          case_mode = "smart_case",
+        })
+        local orig_scoring = sorter.scoring_function
+        sorter.scoring_function = function(self, prompt, line, entry)
+          -- No separator in the query => match against the basename only.
+          if prompt ~= "" and not prompt:find("[/\\]") then
+            line = line:match("[^/\\]*$") or line
+          end
+          return orig_scoring(self, prompt, line, entry)
+        end
+        return sorter
+      end
+
       -- Shortcut to access Telescope's built-in functions
       local builtin = require 'telescope.builtin'
 
@@ -252,15 +250,31 @@ return {
 
       vim.keymap.set('n', '<leader>sI', builtin.lsp_implementations, { desc = '[S]earch LSP [I]mplementations' })
 
-      -- Keymap for searching files with allow-only patterns using `rg --files`
-      vim.keymap.set('n', '<leader>sf', function()
+      -- Build the `rg --files` command with allow-only + exclude globs applied.
+      -- Shared by <leader>sf and the solution-wide search keymaps below.
+      local function build_find_command()
         local find_command = { "rg", "--files", "--hidden", "--no-ignore" }
         for _, pattern in ipairs(allow_patterns) do
           table.insert(find_command, "--glob")
           table.insert(find_command, pattern)
         end
+        for _, pat in ipairs(rg_exclude_globs) do
+          table.insert(find_command, "--glob")
+          table.insert(find_command, pat)
+        end
+        -- Exclude project-specific dirs
+        for _, pat in ipairs(project_ignores) do
+          table.insert(find_command, "--glob")
+          table.insert(find_command, "!" .. pat)
+        end
+        return find_command
+      end
+
+      -- Keymap for searching files with allow-only patterns using `rg --files`
+      vim.keymap.set('n', '<leader>sf', function()
         require('telescope.builtin').find_files {
-          find_command = find_command,
+          find_command = build_find_command(),
+          sorter = filename_first_sorter(),
         }
       end, { desc = '[S]earch [F]iles (allow-only)' })
 
@@ -271,6 +285,15 @@ return {
         for _, pattern in ipairs(allow_patterns) do
           table.insert(grep_args, "--glob")
           table.insert(grep_args, pattern)
+        end
+        for _, pat in ipairs(rg_exclude_globs) do
+          table.insert(grep_args, "--glob")
+          table.insert(grep_args, pat)
+        end
+        -- Exclude project-specific dirs
+        for _, pat in ipairs(project_ignores) do
+          table.insert(grep_args, "--glob")
+          table.insert(grep_args, "!" .. pat)
         end
 
         -- Get current working directory as default search root
@@ -305,8 +328,99 @@ return {
 
       -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+        builtin.find_files {
+          cwd = vim.fn.stdpath 'config',
+          sorter = filename_first_sorter(),
+        }
       end, { desc = '[S]earch [N]eovim files' })
+
+      -- [[ Solution-wide search (multi-project) ]]
+
+      -- Find the solution root: explicit override, else walk up for a marker, else cwd.
+      local function find_solution_root()
+        if vim.g.solution_root then
+          return normalize_path(vim.g.solution_root)
+        end
+        local markers = { "*.sln", ".git", "CMakeLists.txt" }
+        local dir = vim.fn.expand("%:p:h")
+        for _ = 1, 10 do
+          for _, marker in ipairs(markers) do
+            if #vim.fn.glob(dir .. "/" .. marker) > 0 then
+              return normalize_path(dir)
+            end
+          end
+          local parent = vim.fn.fnamemodify(dir, ":h")
+          if parent == dir then break end
+          dir = parent
+        end
+        return normalize_path(vim.loop.cwd())
+      end
+
+      -- Display "name.ext   │ [Project] sub/path", where Project is the first path
+      -- component under the solution root. Typing a project name filters results.
+      -- Because the picker runs rg with cwd = root, `path` is normally already
+      -- relative to root; we only strip the root prefix if rg handed us an absolute path.
+      local function solution_path_display(root, _, path)
+        local rel = normalize_path(path)
+        local nroot = normalize_path(root) .. "/"
+        if rel:match("^%a:/") or rel:match("^/") then -- absolute path: make it root-relative
+          if string.lower(rel:sub(1, #nroot)) == string.lower(nroot) then
+            rel = rel:sub(#nroot + 1)
+          end
+        end
+        local parts = vim.split(rel, "/", { plain = true })
+        local filename = parts[#parts]
+        local project  = #parts > 1 and parts[1] or ""
+        local subpath  = #parts > 2 and table.concat(parts, "/", 2, #parts - 1) or "."
+
+        if #filename > path_width then
+          filename = "..." .. filename:sub(-(path_width - 3))
+        end
+        local padded = filename .. string.rep(" ", math.max(0, path_width - #filename))
+        if project ~= "" then
+          return string.format("%s │ [%s] %s", padded, project, subpath)
+        end
+        return string.format("%s │ %s", padded, subpath)
+      end
+
+      -- <leader>sp — search files across the whole solution, tagged by project.
+      vim.keymap.set('n', '<leader>sp', function()
+        local root = find_solution_root()
+        builtin.find_files {
+          prompt_title = 'Solution Files',
+          cwd          = root,
+          find_command = build_find_command(),
+          sorter       = filename_first_sorter(),
+          path_display = function(opts, p) return solution_path_display(root, opts, p) end,
+        }
+      end, { desc = '[S]earch [P]roject (solution-wide)' })
+
+      -- <leader>sP — pick a top-level project dir, then search files scoped to it.
+      vim.keymap.set('n', '<leader>sP', function()
+        local root = find_solution_root()
+        local dirs = vim.fn.glob(root .. "/*/", false, true)
+        local projects = {}
+        for _, d in ipairs(dirs) do
+          local name = vim.fn.fnamemodify(d:gsub("/$", ""), ":t")
+          table.insert(projects, { name = name, dir = normalize_path(d:gsub("/$", "")) })
+        end
+        if #projects == 0 then
+          vim.notify("No project directories found under " .. root, vim.log.levels.WARN)
+          return
+        end
+        vim.ui.select(projects, {
+          prompt = "Select project:",
+          format_item = function(item) return item.name end,
+        }, function(choice)
+          if not choice then return end
+          builtin.find_files {
+            prompt_title = 'Files: ' .. choice.name,
+            cwd          = choice.dir,
+            find_command = build_find_command(),
+            sorter       = filename_first_sorter(),
+          }
+        end)
+      end, { desc = '[S]earch in [P]roject (pick first)' })
     end,
   },
 }

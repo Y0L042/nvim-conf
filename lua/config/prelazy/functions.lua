@@ -31,6 +31,7 @@ _G.save_all_tabs = function()
 end
 -- Map F5 to call the save_all_tabs function
 vim.api.nvim_set_keymap('n', '<F5>', ':lua _G.save_all_tabs()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('i', '<F5>', '<ESC>:lua _G.save_all_tabs()<CR>', { noremap = true, silent = true })
 
 
 
@@ -77,3 +78,17 @@ end
 
 -- Map the function to a command for easy use
 vim.api.nvim_create_user_command('ClearShada', clear_shada_files, {})
+
+-- Function to set tab width and format the document
+_G.set_tab_width_and_format = function(width)
+  -- Set tab-related options
+  vim.opt.tabstop = width
+  vim.opt.shiftwidth = width
+  vim.opt.softtabstop = width
+  vim.opt.expandtab = true
+
+  -- Format the entire buffer using LSP
+  vim.lsp.buf.format({ async = false })
+
+  print("Tab width set to " .. width .. " spaces and document formatted")
+end

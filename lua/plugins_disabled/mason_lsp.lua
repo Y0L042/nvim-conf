@@ -55,6 +55,7 @@ return {
           '--limit-results=50',       -- Limit completion results
           '--header-insertion=never', -- Prevent header insertion memory overhead
         },
+        capabilities = require('cmp_nvim_lsp').default_capabilities(),
         settings = {
           clangd = {
             InlayHints = {

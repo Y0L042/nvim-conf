@@ -31,10 +31,104 @@ return {
       end
       local api = require 'nvim-tree.api'
 
+      -- Custom C/C++ bundled sorter: groups header/source pairs together
+      local function custom_cpp_bundled_sorter(nodes)
+        -- Define extension priority for C/C++ files
+        local cpp_extensions = {h = 1, hpp = 2, c = 3, cpp = 4}
+
+        -- Extract base name (filename without extension)
+        local function get_basename(name)
+          local base = name:match("(.+)%.[^%.]+$")
+          return base or name -- Return full name if no extension
+        end
+
+        -- Partition nodes into folders and files
+        local folders = {}
+        local cpp_files = {}
+        local other_files = {}
+
+        for _, node in ipairs(nodes) do
+          if node.type == "directory" then
+            table.insert(folders, node)
+          else
+            local ext = node.extension or ""
+            if cpp_extensions[ext] then
+              table.insert(cpp_files, node)
+            else
+              table.insert(other_files, node)
+            end
+          end
+        end
+
+        -- Sort folders alphabetically
+        table.sort(folders, function(a, b)
+          return a.name:lower() < b.name:lower()
+        end)
+
+        -- Sort C/C++ files by base name, then by extension priority
+        table.sort(cpp_files, function(a, b)
+          local a_base = get_basename(a.name):lower()
+          local b_base = get_basename(b.name):lower()
+
+          -- Compare base names first
+          if a_base ~= b_base then
+            return a_base < b_base
+          end
+
+          -- Same base name: sort by extension priority
+          local a_ext = a.extension or ""
+          local b_ext = b.extension or ""
+          local a_priority = cpp_extensions[a_ext] or 999
+          local b_priority = cpp_extensions[b_ext] or 999
+
+          return a_priority < b_priority
+        end)
+
+        -- Sort other files alphabetically
+        table.sort(other_files, function(a, b)
+          return a.name:lower() < b.name:lower()
+        end)
+
+        -- Clear the original nodes array and repopulate it
+        for i = #nodes, 1, -1 do
+          nodes[i] = nil
+        end
+
+        -- Combine: folders first, then C/C++ bundles, then other files
+        for _, folder in ipairs(folders) do
+          table.insert(nodes, folder)
+        end
+        for _, file in ipairs(cpp_files) do
+          table.insert(nodes, file)
+        end
+        for _, file in ipairs(other_files) do
+          table.insert(nodes, file)
+        end
+      end
+
+      require("nvim-web-devicons").set_icon({
+        das = {
+          icon = "\xF3\xB1\x90\x8B",
+          color = "#FF7575",
+          name = "Daslang",
+        },
+        das_module = {
+          icon = "\xF3\xB1\x90\x8B",
+          color = "#808080",
+          name = "DaslangModule",
+        },
+        das_project = {
+          icon = "\xF3\xB1\x90\x8B",
+          color = "#808080",
+          name = "DaslangProject",
+        },
+      })
+
       require("nvim-tree").setup {
+        hijack_cursor = true,
+        sync_root_with_cwd = true,
         filesystem_watchers = {
-          enable = true,
-          debounce_delay = 500, -- Increased from 50ms to reduce CPU/memory load
+          enable = false,
         },
         -- Commented out experimental file watcher to prevent memory leaks
         -- experimental = {
@@ -50,6 +144,7 @@ return {
             "^bin$",
             "^target$",
             "^dist$",
+            "^.claude$",
             "\\.o$",
             "\\.obj$",
             "\\.exe$",
@@ -61,31 +156,32 @@ return {
           },
         },
         git = {
-          enable = true,
-          ignore = false,
+          enable = false,
         },
         renderer = {
+          root_folder_label = false,
           icons = {
             show = {
-              git = true,
+              git = false,
               file = true,
               folder = true,
               folder_arrow = true,
             },
           },
           highlight_opened_files = "name",
-          highlight_git = true,
+          highlight_git = false,
         },
         view = {
           adaptive_size = true,
-          width = {
-            min = 30,
-            max = 75,
-          },
+          preserve_window_proportions = true,
+          width = 35,
           side = "left",
           number = true,
           relativenumber = true,
         },
+        sort_by = function(nodes)
+          custom_cpp_bundled_sorter(nodes)
+        end,
         on_attach = function(bufnr)
           local api = require("nvim-tree.api")
 
@@ -114,23 +210,12 @@ return {
         end,
       }
 
-      vim.api.nvim_set_keymap("n", "<A-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+      vim.api.nvim_set_keymap("n", "<A-m>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+      -- Reveal (and open tree to) the current buffer's file
+      vim.api.nvim_set_keymap("n", "<A-M>", ":NvimTreeFindFile<CR>", { noremap = true, silent = true })
 
       -- Use augroup to prevent duplicate autocmds on config reload
       vim.api.nvim_create_augroup('NvimTreeCustom', { clear = true })
-
-      vim.api.nvim_create_autocmd({ 'BufEnter' }, {
-        group = 'NvimTreeCustom',
-        pattern = 'NvimTree*',
-        callback = function()
-          local api = require('nvim-tree.api')
-          local view = require('nvim-tree.view')
-
-          if not view.is_visible() then
-            api.tree.open()
-          end
-        end,
-      })
 
       vim.api.nvim_create_autocmd("SessionLoadPost", {
         group = 'NvimTreeCustom',

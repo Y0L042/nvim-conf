@@ -1,3 +1,44 @@
+-- Register daslang filetype
+vim.filetype.add({
+  extension = {
+    das = "dascript",
+    das_project = "dascript",
+    das_module = "dascript",
+    das_package = "dascript"
+  },
+})
+
+-- Register the precompiled daslang tree-sitter parser
+vim.treesitter.language.add("daslang", {
+  path = "C:/Programs/daslang/tree-sitter-daslang/daslang.dll",
+})
+
+-- Map the `dascript` filetype to the `daslang` parser. This (plus highlighting below) was
+-- previously provided by the generic `daslang-lsp` plugin's treesitter.setup(); since that
+-- plugin is now disabled (it false-flags dn_* bindings), highlighting is wired here so it no
+-- longer depends on it.
+vim.treesitter.language.register("daslang", "dascript")
+
+-- The daslang queries live at queries/highlights.scm (no `daslang/` language subdir), so the
+-- standard runtimepath lookup (<rtp>/queries/daslang/highlights.scm) won't find them. Load the
+-- highlights query explicitly instead.
+do
+  local hl = "C:/Programs/daslang/tree-sitter-daslang/queries/highlights.scm"
+  local f = io.open(hl, "r")
+  if f then
+    local q = f:read("*a"); f:close()
+    pcall(vim.treesitter.query.set, "daslang", "highlights", q)
+  end
+end
+
+-- Start treesitter highlighting on dascript buffers (independent of the LSP).
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "dascript",
+  callback = function(ev)
+    pcall(vim.treesitter.start, ev.buf, "daslang")
+  end,
+})
+
 return {
   -- [[ TreeSitter  ]]
   {
