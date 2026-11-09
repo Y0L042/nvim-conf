@@ -1,0 +1,187 @@
+================================
+NEOVIM MEMORY LEAK DIAGNOSTIC GUIDE
+================================
+
+Your Neovim has been configured with diagnostic tools. Follow these steps:
+
+## 1. IMMEDIATE CHECKS (in Neovim)
+
+Run these commands to see current state:
+    :MemCheck          - Shows current memory usage, LSP clients, buffers, autocmds
+    :LspLogCheck       - Shows LSP log file size
+    :checkhealth       - Check for plugin issues
+
+## 2. MONITORING DURING USAGE
+
+The config now logs memory events automatically to:
+    %LOCALAPPDATA%\nvim-data\memory_log.txt
+
+Or in Neovim:
+    :echo stdpath('data') . '/memory_log.txt'
+
+Every 2 minutes, memory is auto-checked and logged to console.
+
+Use keymaps:
+    <leader>dm         - Manual memory check
+    <leader>dg         - Force garbage collection
+
+## 3. LIKELY CULPRITS TO TEST
+
+### Test A: Disable nvim-tree
+Edit: lua/plugins/nvim-tree.lua
+Change:
+    lazy = false,
+To:
+    lazy = true,
+    enabled = false,
+
+Restart Neovim and test for 15 minutes.
+
+### Test B: Disable auto-session
+Edit: lua/plugins/auto-session.lua
+Add at top of plugin spec:
+    enabled = false,
+
+Restart and test.
+
+### Test C: Disable clangd
+Edit: lua/plugins/mason_lsp.lua
+Comment out the clangd config section (lines ~48-65)
+
+Restart and test.
+
+### Test D: Check LSP logs
+In Neovim:
+    :LspLogCheck
+    
+If log is huge (>100MB), that's your culprit. Run:
+    :LspLogClear
+
+## 4. WINDOWS TASK MANAGER MONITORING
+
+1. Open Task Manager (Ctrl+Shift+Esc)
+2. Go to Details tab
+3. Find nvim.exe
+4. Add columns: Working Set (Memory), Commit Size
+5. Monitor growth over time
+
+Also check for:
+- clangd.exe (LSP server process)
+- lua-language-server.exe
+- Any other spawned processes
+
+## 5. ADVANCED: PROCESS EXPLORER
+
+Download Microsoft Process Explorer for detailed analysis:
+https://learn.microsoft.com/en-us/sysinternals/downloads/process-explorer
+
+This shows:
+- Memory breakdown by type
+- Handle leaks
+- Child processes
+- Memory allocation stack traces
+
+## 6. CHECK FOR THESE SPECIFIC ISSUES
+
+### Large files
+Are you opening very large files? (>100MB)
+    :echo getfsize(expand('%'))
+
+### Buffer accumulation
+    :ls!
+Check if hundreds of buffers are loaded
+
+### Autocmd accumulation
+    :autocmd
+If thousands of autocmds exist, that's a leak
+
+### LSP client proliferation
+    :lua print(vim.inspect(vim.lsp.get_clients()))
+Should only see 1-2 clients, not dozens
+
+## 7. NUCLEAR OPTION: MINIMAL CONFIG
+
+Create minimal_init.lua:
+```lua
+-- Minimal config to test
+vim.opt.number = true
+-- Add ONE plugin at a time to find culprit
+```
+
+Run with:
+    nvim -u minimal_init.lua
+
+## 8. REPORTING FINDINGS
+
+After testing, report:
+1. Which test (A/B/C/D) fixed it?
+2. Contents of memory_log.txt
+3. Output of :MemCheck before crash
+4. Are you working on C/C++ files?
+5. How many files are in your project?
+6. Do you have very large source files?
+
+================================
+MOST LIKELY CAUSES (IN ORDER)
+================================
+
+1. **clangd with large C++ project**
+   - Background indexing entire codebase
+   - Solution: Use .clangd config to limit scope
+
+2. **nvim-tree watching large directory**
+   - Watching thousands of files
+   - Solution: Add more ignore patterns
+
+3. **LSP log file growing unbounded**
+   - Now limited with lsp_log_config.lua
+   
+4. **Telescope history/cache accumulation**
+   - Check ~/.local/share/nvim/telescope_history
+
+5. **Session file bloat**
+   - Sessions saving too much state
+   
+6. **TreeSitter parser memory**
+   - Multiple large files parsed
+
+================================
+QUICK FIXES TO TRY NOW
+================================
+
+1. Add to mason_lsp.lua clangd config:
+```lua
+cmd = {
+  "clangd",
+  "--background-index=false",
+  "--compile-commands-dir=.",  -- Limit to current dir
+  "--limit-results=20",
+  "--header-insertion=never",
+}
+```
+
+2. Add to nvim-tree.lua filters:
+```lua
+filters = {
+  dotfiles = false,
+  custom = {
+    "^.git$",
+    "node_modules",
+    "^build$",
+    "^out$",
+    "^bin$",
+    ".o$",
+    ".exe$",
+  },
+},
+```
+
+3. If working on large project, create .clangd file:
+```yaml
+Index:
+  Background: Skip
+CompileFlags:
+  CompilationDatabase: .
+```
+
+================================

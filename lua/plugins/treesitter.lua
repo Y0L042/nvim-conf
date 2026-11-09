@@ -27,16 +27,36 @@ do
   local f = io.open(hl, "r")
   if f then
     local q = f:read("*a"); f:close()
-    pcall(vim.treesitter.query.set, "daslang", "highlights", q)
+    vim.treesitter.query.set("daslang", "highlights", q)
+  else
+    vim.notify("daslang: highlights.scm not found at " .. hl, vim.log.levels.WARN)
   end
 end
 
--- Start treesitter highlighting on dascript buffers (independent of the LSP).
+-- Start treesitter highlighting on daslang buffers (independent of the LSP).
+-- Errors are reported rather than swallowed so a stale daslang.dll / highlights.scm mismatch
+-- (query references a node type the parser doesn't know) shows up in :messages instead of
+-- silently leaving the buffer unhighlighted.
+local function das_start_highlight(buf)
+  if not vim.api.nvim_buf_is_valid(buf) or vim.treesitter.highlighter.active[buf] then return end
+  local ok, err = pcall(vim.treesitter.start, buf, "daslang")
+  if not ok then
+    vim.notify("daslang treesitter highlighting failed:\n" .. tostring(err), vim.log.levels.WARN)
+  end
+end
+
+local das_hl_group = vim.api.nvim_create_augroup("daslang_highlight", { clear = true })
 vim.api.nvim_create_autocmd("FileType", {
+  group = das_hl_group,
   pattern = "dascript",
-  callback = function(ev)
-    pcall(vim.treesitter.start, ev.buf, "daslang")
-  end,
+  callback = function(ev) das_start_highlight(ev.buf) end,
+})
+-- Belt and braces: buffers that reach a window without having gone through the FileType path
+-- with our autocmd in place (e.g. session restore ordering) get attached by extension.
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = das_hl_group,
+  pattern = { "*.das", "*.das_project", "*.das_module", "*.das_package" },
+  callback = function(ev) das_start_highlight(ev.buf) end,
 })
 
 return {
@@ -48,7 +68,7 @@ return {
     config = function()
       require 'nvim-treesitter.configs'.setup {
         -- Ensure these parsers are installed
-        ensure_installed = { "c", "cpp", "lua" },
+        ensure_installed = { "c", "cpp", "lua", "rust", "ron" },
 
         -- Install parsers synchronously (only applied to `ensure_installed`)
         sync_install = false,

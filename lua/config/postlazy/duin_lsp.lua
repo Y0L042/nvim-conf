@@ -14,7 +14,7 @@
 -- .das_project above the file) this server does not start, so the generic one is unaffected.
 
 -- ===== Config (adjust paths if your tree differs) =====
-local DUIN_ROOT   = "C:/Projects/CPP_Projects/Duin"
+local DUIN_ROOT   = "D:/Projects/CPP_Projects/Duin"
 local DASLANG_EXE = DUIN_ROOT .. "/Duin/vendor/daslang/bin/Debug/daslang.exe"
 local PROXY_DAS   = DUIN_ROOT .. "/DuinDasHost/scripts/proxy.das"
 local HOST_EXE    = DUIN_ROOT .. "/DuinDasHost/bin/Debug-windows-x86_64/DuinDasHost/DuinDasHost.exe"

@@ -29,11 +29,76 @@ return {
   event = "VeryLazy",
   config = function()
     local fzf = require("fzf-lua")
+    local utils = require("fzf-lua.utils")
+    local path = require("fzf-lua.path")
+
+    -- Minimum column width (in chars) reserved for "<filename.ext>" before
+    -- the path starts, so paths line up like a fixed-width tab stop.
+    local FILENAME_COL_WIDTH = 80
 
     fzf.setup({
-      -- Filename-first display (matches the old Telescope path_display).
+      -- Filename-first display (matches the old Telescope path_display),
+      -- using a custom formatter (below) that pads the filename column to
+      -- a fixed width instead of stock `path.filename_first`'s single tab.
       defaults = {
-        formatter = "path.filename_first",
+        formatter = "path.filename_first_padded",
+      },
+      formatters = {
+        path = {
+          filename_first_padded = {
+            enrich = function(o)
+              o.fzf_opts = vim.tbl_extend("keep", o.fzf_opts or {}, { ["--tabstop"] = 1 })
+              return o
+            end,
+            -- NOTE: `_to` must return Lua *source* (as a string): it gets
+            -- `loadstring`'d by fzf-lua so closures survive being cached.
+            _to = function(o)
+              local _, hl_dir = utils.ansi_from_hl(o.hls.dir_part, "foo")
+              local _, hl_file = utils.ansi_from_hl(o.hls.file_part, "foo")
+              return ([[
+                return function(s, _, m)
+                  local _path, _utils = m.path, m.utils
+                  local _hl_dir = "%s"
+                  local _hl_file = "%s"
+                  local tail = _path.tail(s)
+                  local parent = _path.parent(s)
+                  local padded = tail .. string.rep(" ", math.max(1, %d - #tail))
+                  if #_hl_file > 0 then
+                    padded = _hl_file .. padded .. _utils.ansi_escseq.clear
+                  end
+                  if parent then
+                    parent = _path.remove_trailing(parent)
+                    if #_hl_dir > 0 then
+                      parent = _hl_dir .. parent .. _utils.ansi_escseq.clear
+                    end
+                    return padded .. "\t" .. parent
+                  else
+                    return padded
+                  end
+                end
+              ]]):format(hl_dir or "", hl_file or "", FILENAME_COL_WIDTH)
+            end,
+            from = function(s)
+              local parts = utils.strsplit(s, utils.nbsp)
+              local last = parts[#parts]
+              local filename, rest = last:match("^([^:]-)\t(.+)$")
+              if filename and rest then
+                filename = filename:gsub("%s+$", "")
+                local parent
+                if utils.__IS_WINDOWS and path.is_absolute(rest) then
+                  parent = rest:sub(1, 2) .. (#rest > 2 and rest:sub(3):match("^[^:]+") or "")
+                else
+                  parent = rest:match("^[^:]+")
+                end
+                local fullpath = path.join({ parent, filename })
+                parts[#parts] = fullpath .. rest:sub(#parent + 1)
+                return table.concat(parts, utils.nbsp)
+              else
+                return s
+              end
+            end,
+          },
+        },
       },
       winopts = {
         -- Previewer disabled by default for performance (matches Telescope).
@@ -44,12 +109,20 @@ return {
           -- <A-v> to open in a vertical split (matches the old Telescope mapping).
           ["alt-v"] = fzf.actions.file_vsplit,
         },
+        file_ignore_patterns = {
+            "%.inc$",
+        },
+      },
+      grep = {
+        -- Suppress the "Added missing flag" notices (fzf-lua auto-adds
+        -- --line-number/--column to rg by default anyway).
+        silent = true,
       },
     })
 
     -- Helper: find the solution root for the *p mappings (walks up for a marker).
-    local function normalize_path(path)
-      return path:gsub("\\", "/")
+    local function normalize_path(p)
+      return p:gsub("\\", "/")
     end
 
     local function find_solution_root()

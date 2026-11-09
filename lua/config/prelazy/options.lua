@@ -84,3 +84,5 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- Set the timeout length for leader key sequences
 vim.opt.timeoutlen = 1500 -- Adjust this value as needed, 1000 ms = 1 second
+
+vim.opt.fileformats = { "unix", "dos" }

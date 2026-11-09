@@ -35,3 +35,6 @@ vim.opt.splitbelow = true
 vim.opt.inccommand = 'split'
 
 vim.cmd('packadd cfilter')
+
+vim.g.lazyvim_rust_diagnostics = "rust-analyzer"
+
